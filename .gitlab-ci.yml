@@ -1,0 +1,39 @@
+include:
+  - project: 'tcw-group/technology/platform-engineering/development-operations/cicd-configurations'
+    ref: 'main'
+    file: '/go/pipelines/x1/go.webservice.cloud.default.pipeline.yml'
+
+variables:
+  PROJECT_NAME: 'trade-refresher'
+  DEPLOYMENT_NAME: 'trade-refresher'
+  OPEN_API_DOCUMENTATION: ''
+
+  ## AKS Tags ####################################################################################
+  APPLICATION_OWNER: 'engineering-solutions'
+  APPLICATION_TYPE: 'trade-refresher'
+  APPLICATION_SENSITIVITY: 'private'
+  ################################################################################################
+  
+  ## DOCKER CONFIGURATIONS ########################################################################
+  CUSTOM_DOCKERFILE: 'false'
+  #################################################################################################
+
+  ## DNS Configurations ###########################################################################
+  ENABLE_TLS: 'false'
+  DOMAIN: trade-refresher 
+  #################################################################################################
+
+  ## Workload Identity Configurations #############################################################
+  ENABLE_WORKLOAD_IDENTITY: 'false'
+  NONPROD_AZURE_CLIENT_ID: 
+  NONPROD_K8S_SERVICE_ACCT: 
+  PROD_AZURE_CLIENT_ID: 
+  PROD_K8S_SERVICE_ACCT: 
+  #################################################################################################
+
+  ## Authorization Configurations #################################################################
+  ENABLE_AUTHORIZATIONS: 'false'
+  PDPKEY_DEVELOPMENT:
+  PDPKEY_QA:
+  PDPKEY_PRODUCTION:
+  #################################################################################################
