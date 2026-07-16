@@ -1,93 +1,112 @@
-# go-fiber-api
+# trade-refresher
 
+Refreshes BlackRock Aladdin trades into Snowflake and proxies every Trade API operation for AKS-internal callers.
 
+## API
 
-## Getting started
+```sh
+# Local
+BASE_URL="http://localhost:8100/de/v1/api"
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+# Same AKS cluster
+BASE_URL="http://trade-refresher.<namespace>.svc.cluster.local/de/v1/api"
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
-
-```
-cd existing_repo
-git remote add origin https://gitlab.com/tcw-group/technology/platform-engineering/templates/go-fiber-api.git
-git branch -M main
-git push -uf origin main
+API_KEY="<trade-refresher-api-key value>"
+CORRELATION_ID="investment-operations" # UUID, team name, or email
 ```
 
-## Integrate with your tools
+Every proxy request requires `Authorization: Bearer <API_KEY>` and a caller-supplied `X-Correlation-ID` of 1-256 bytes. Every `POST` also requires `Content-Type: application/json` and a valid JSON body. The correlation ID is returned and logged; credentials and trade payloads are not logged.
 
-- [ ] [Set up project integrations](https://gitlab.com/tcw-group/technology/platform-engineering/templates/go-fiber-api/-/settings/integrations)
+| Endpoint | Required input | Returns |
+| --- | --- | --- |
+| `GET /longrunningoperations/{id}` | Batch operation `id` | Operation status and completed batch result |
+| `POST /trades:filter` | Filter `query`; optional `options`, `expands`, `pageSize`, `pageToken` | Block trades, status, and optional `nextPageToken` |
+| `POST /trades:retrieve` | One of `tradeKeys`, `externTradeKeys`, or `orderKeys` | Matching block trades and status |
+| `POST /trades:post` | One `blockTrade`; optional post `config` | Post/update result |
+| `POST /trades:batchPost` | `blockTrades` array; optional post `config` | Long-running operation |
+| `POST /trades:cancel` | One `tradeKey`; optional cancel `config` | Cancellation result |
+| `POST /trades:batchCancel` | `tradeKeys` array; optional cancel `config` | Long-running operation |
 
-## Collaborate with your team
+Use local Swagger for complete request schemas and field descriptions:
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+- `http://localhost:8100/de/v1/api/docs/`
+- `http://localhost:8100/de/v1/api/openapi.json`
 
-## Test and Deploy
+Swagger is disabled in AKS when `INTERNAL_INGRESS_ENABLED=false`. When internal ingress is enabled, use `https://<internal-ingress-host>/de/v1/api/docs/`; Swagger is not intended for `svc.cluster.local` access.
 
-Use the built-in continuous integration in GitLab.
+### Example
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+```sh
+curl --fail-with-body --request POST "$BASE_URL/trades:filter" \
+  --header "Authorization: Bearer $API_KEY" \
+  --header "X-Correlation-ID: $CORRELATION_ID" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "pageSize": 1000,
+    "expands": ["asset.summary"],
+    "query": {"criteria": {
+      "portfolio": {"portfolioReferences": [{"portfolioTicker": "702T"}]},
+      "dateTime": {"modifyTimeRange": {
+        "startTime": "2026-07-14T16:00:00Z",
+        "endTime": "2026-07-14T17:00:00Z"
+      }}
+    }}
+  }'
+```
 
-***
+BlackRock filter requests accept at most 100 portfolios and a modify-time range of at most 3,600 seconds. When `nextPageToken` is returned, resend the same filter with that token. The background refresher handles oversized portfolio groups automatically; the proxy does not expand them.
 
-# Editing this README
+Read calls retry bounded `429`, `500`, `502`, `503`, and `504` responses and honor `Retry-After`. Write calls are not retried because their outcome may be unknown. Dynatrace records one structured event per BlackRock call with correlation, endpoint, status, duration, sanitized query, portfolio group/number, and BlackRock request IDs.
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+## Snowflake
 
-## Suggestions for a good README
+When `TRADE_REFRESH_ENABLED=true`, the service creates:
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+| Object | Purpose |
+| --- | --- |
+| `<database>.STAGING_ALADDIN.TRADES` | One current row per allocation-level trade |
+| `<database>.STAGING_ALADDIN.TRADE_REFRESH_STATE` | Checkpoint, lease, cached group membership, and recovery state |
 
-## Name
-Choose a self-explaining name for your project.
+Databases are `TCW_CORE_DEV` for local/sandbox/development, `TCW_CORE_QA` for QA, and `TCW_CORE` for production. `SNOWFLAKE_SCHEMA` defaults to `STAGING_ALADDIN` and accepts case-insensitive environment values.
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+`TRADES` has 216 columns covering all 200 OpenAPI trade-data leaves plus derived and operational fields. Key layout:
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+- `AS_OF_DATE DATE` is the first column and comes from `tradeDate`.
+- `PORTFOLIO_NUMBER VARCHAR` is second and comes from `portfolioReference.portfolioTicker`.
+- OpenAPI doubles use `FLOAT`, int32 values use `NUMBER(10,0)`, dates use `DATE`, and timestamps use `TIMESTAMP_TZ`.
+- Repeated child properties use separate RFC 4180 comma-separated `VARCHAR` columns in source order.
+- `SOURCE_DATA` retains the complete nested source for audit, relationships, and future fields.
+- `BLOCK_CURRENT_KEY`, `BLOCK_VERSION_KEY`, `TRADE_CURRENT_KEY`, and `TRADE_VERSION_KEY` support lineage and idempotent MERGE. `TRADE_ID` is the final column.
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+All stored timestamps and application logs use `America/Los_Angeles`, including PST/PDT transitions. No Snowflake stage, staging table, or detail table is created.
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+## Refresh
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+- Runs on weekdays between `TRADE_REFRESH_START_TIME_PT` and `TRADE_REFRESH_END_TIME_PT` at `TRADE_REFRESH_INTERVAL_MINUTES`.
+- Accepts `group:<ticker>`, one portfolio, or comma-separated portfolios through `ALADDIN_TRADE_PORTFOLIO_FILTER`.
+- Resolves portfolio groups on the configured `ALADDIN_PORTFOLIO_GROUP_REFRESH_MINUTES` interval and persists the cache across restarts.
+- Splits group members into parallel batches of at most 100 and follows every trade page token.
+- Uses all OpenAPI trade enrichments, a safety delay, lookback overlap, deterministic MERGE, and a durable checkpoint.
+- Replays missed windows after crashes, redeployments, weekends, rate limits, and retryable upstream failures.
+- Caps first-run and outage recovery with `TRADE_REFRESH_MAX_CATCHUP_DURATION`. Use whole hours or days, such as `12H`, `48H`, or `2D`; one day is exactly 24 hours.
+- Isolates removed or inactive portfolios and persists unresolved recovery windows without blocking active portfolios.
+- Shares the OpenAPI limits of 1,000 reads and 250 writes per minute with proxy traffic.
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+## API Key
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+Every environment uses the Azure Key Vault secret `trade-refresher-api-key`. Generate a 256-bit value from Git Bash on Windows:
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+```sh
+./scripts/generate-trade-api-key.sh development
+```
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+The script prints the secret name and value but does not modify Azure Key Vault.
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+## Verify
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+```sh
+go test ./...
+go test -race ./...
+go vet ./...
+go build ./cmd/trade-refresher
+```

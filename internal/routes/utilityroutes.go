@@ -1,64 +1,57 @@
 package routes
 
 import (
-	"encoding/json"
-	"fmt"
+	"context"
+	"errors"
 	"net/http"
 	"time"
 
-	"refresher/trade-refresher/configs"
-
-	swagger "github.com/arsmn/fiber-swagger/v2"
 	"github.com/gofiber/fiber/v2"
+	"go.uber.org/zap"
+
+	"refresher/trade-refresher/internal/utils/log"
 )
 
+func UtilityRoutes(ctx context.Context, app *fiber.App) {
+	registerHealthRoutes(app)
 
-func echoHandler(ctx *fiber.Ctx) error {
-	message := ctx.Query("message")
-	return ctx.JSON(fiber.Map{
-		"message": "Received echo request: " + message,
+	mux := http.NewServeMux()
+	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte("status: healthy"))
 	})
-}
-
-func envHandler(ctx *fiber.Ctx) error {
-	envJson, err := json.Marshal(configs.EnvConfigs)
-	if err != nil {
-		return ctx.SendStatus(fiber.StatusBadRequest)
+	srv := &http.Server{
+		Addr:              ":8080",
+		ReadHeaderTimeout: 10 * time.Second,
+		ReadTimeout:       10 * time.Second,
+		WriteTimeout:      10 * time.Second,
+		IdleTimeout:       time.Hour,
+		Handler:           mux,
 	}
-	ctx.Set("Content-Type", "application/json")
-	return ctx.Send(envJson)
-}
-
-func UtilityRoutes(app *fiber.App) {
-	app.Get(route_prefix + "v1/api/echo", echoHandler)
-	app.Get(route_prefix + "v1/api/env", envHandler)
-	app.Get(route_prefix + "v1/api/swagger", swagger.HandlerDefault)
-
-	// RB: isolate the health check on a separate goroutine to ensure it is never blocked
-
+	serverErr := make(chan error, 1)
 	go func() {
-		mux := http.NewServeMux()
-		mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-			_, _ = w.Write([]byte("status: healthy"))
-		})
-
-		srv := &http.Server{
-			Addr:              ":8080",
-			ReadHeaderTimeout: time.Duration(10 * int(time.Second)),
-			ReadTimeout:       time.Duration(10 * int(time.Second)),
-			WriteTimeout:      time.Duration(10 * int(time.Second)),
-			IdleTimeout:       time.Duration(1 * int(time.Hour)),
-			Handler:           mux,
-		}
-
-		if err := srv.ListenAndServe(); err != nil {
-			panic(fmt.Sprintf("utilityroutes.go: health handler has thrown an error: %v", err))
+		serverErr <- srv.ListenAndServe()
+	}()
+	go func() {
+		select {
+		case err := <-serverErr:
+			if err != nil && !errors.Is(err, http.ErrServerClosed) {
+				log.Logger.Error("health.server.listen_failed", zap.Error(err))
+			}
+		case <-ctx.Done():
+			shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			if err := srv.Shutdown(shutdownCtx); err != nil {
+				log.Logger.Error("health.server.shutdown_failed", zap.Error(err))
+			}
 		}
 	}()
+}
 
-	app.Use(
-		func(ctx *fiber.Ctx) error {
-			return ctx.SendStatus(fiber.StatusNotFound)
-		},
-	)
+func registerHealthRoutes(app *fiber.App) {
+	app.Get(apiBasePath+"/live", healthHandler)
+	app.Get(apiBasePath+"/ready", healthHandler)
+}
+
+func healthHandler(ctx *fiber.Ctx) error {
+	return ctx.JSON(fiber.Map{"status": "healthy"})
 }

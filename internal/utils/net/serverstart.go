@@ -1,43 +1,52 @@
 package net
 
 import (
-
-	"log"
 	"os"
 	"os/signal"
+	"sync"
+	"syscall"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"go.uber.org/zap"
+
+	appLog "refresher/trade-refresher/internal/utils/log"
 )
 
-func StartServerWithGracefulShutdown(a *fiber.App) {
-	idleConnsClosed := make(chan struct{})
-
+func StartServerWithGracefulShutdown(a *fiber.App, stopBackground func()) {
+	serverErr := make(chan error, 1)
 	go func() {
-		sigint := make(chan os.Signal, 1)
-		signal.Notify(sigint, os.Interrupt) // Catch OS signals.
-		<-sigint
-
-		// Received an interrupt signal, shutdown.
-		if err := a.Shutdown(); err != nil {
-			log.Printf("Oops... Server is not shutting down! Reason: %v", err)
-		}
-
-		close(idleConnsClosed)
+		serverErr <- a.Listen(":8100")
 	}()
 
-	fiberConnURL, _ := ConnectionURLBuilder("fiber")
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, os.Interrupt, syscall.SIGTERM)
+	defer signal.Stop(signals)
+	stop := sync.OnceFunc(func() {
+		if stopBackground != nil {
+			stopBackground()
+		}
+	})
+	defer stop()
 
-	if err := a.Listen(fiberConnURL); err != nil {
-		log.Printf("Oops... Server is not running! Reason: %v", err)
-	}
-
-	<-idleConnsClosed
-}
-
-func StartServer(a *fiber.App) {
-	fiberConnURL, _ := ConnectionURLBuilder("fiber")
-
-	if err := a.Listen(fiberConnURL); err != nil {
-		log.Printf("Oops... Server is not running! Reason: %v", err)
+	select {
+	case signal := <-signals:
+		appLog.Logger.Info("fiber.server.shutdown_started", zap.String("signal", signal.String()))
+		stop()
+		if err := a.ShutdownWithTimeout(20 * time.Second); err != nil {
+			appLog.Logger.Error("fiber.server.shutdown_failed", zap.Error(err))
+		}
+		select {
+		case err := <-serverErr:
+			if err != nil {
+				appLog.Logger.Error("fiber.server.listen_failed", zap.Error(err))
+			}
+		case <-time.After(time.Second):
+			appLog.Logger.Warn("fiber.server.stop_timeout")
+		}
+	case err := <-serverErr:
+		if err != nil {
+			appLog.Logger.Fatal("fiber.server.listen_failed", zap.Error(err))
+		}
 	}
 }

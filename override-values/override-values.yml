@@ -1,14 +1,17 @@
 useHostName: true
-useIngress: true
+useIngress: false
 useAutoScaling: false
 useWorkloadIdentity: true
 useSecretsVault: false
 useSnowflakeCredentials: false
 
 resource:
+  requests:
+    memory: '512Mi'
+    cpu: '500m'
   limits:
-    memory: '256Mi'
-    cpu: '250m'
+    memory: '1Gi'
+    cpu: '1000m'
 
 livenessProbe:
   port: 8080
@@ -17,29 +20,8 @@ livenessProbe:
   periodSeconds: 60
   failureThreshold: 3
 
-## Ingress ########################################################################################
-ingress:
-  paths:
-    - path: /de
-      pathType: Prefix
-      serviceName: trade-refresher
-      servicePort: 80
-###################################################################################################
-
-## Secrets ########################################################################################
-# secrets:
-#   items:
-#     - vaultKey: azure-keyvault-secret-key-value
-#       envvarKey: DESIRED_ENVIRONMENT_VARIABLE_KEY
-###################################################################################################
-
-## Snowflake Credentials ##########################################################################
-# snowflakeCredentials:
-#   key: ASSIGNED-SNOWFLAKE-CREDENTIALS-KEY-FROM-IAM
-###################################################################################################
-
-## Custom Environment Variables ###################################################################
 userDefined:
   - name: SERVICE_MESH
     value: velocity
-###################################################################################################
+  - name: GOMEMLIMIT
+    value: 900MiB
