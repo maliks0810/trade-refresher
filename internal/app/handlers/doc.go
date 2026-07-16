@@ -1,2 +1,2 @@
-// Package handlers provides functions to process incoming REST methods
+// Package handlers contains HTTP handlers for Trade API proxy routes.
 package handlers

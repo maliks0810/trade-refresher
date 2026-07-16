@@ -1,5 +1,5 @@
 deployment:
-  replicas: 3
+  replicas: 1
 
 # secrets:
 #   azureKeyVaultName: azure-keyvault-name-goes-here

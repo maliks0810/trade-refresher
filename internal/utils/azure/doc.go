@@ -1,2 +1,2 @@
-// Package azure provides common Platform Engineering wrappers for Azure SDK implementation
+// Package azure wraps Azure SDK clients used by the refresher.
 package azure

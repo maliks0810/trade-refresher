@@ -2,20 +2,18 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"strings"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
-	"go.opentelemetry.io/otel"
-	stdout "go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
-	"go.opentelemetry.io/otel/propagation"
-	"go.opentelemetry.io/otel/sdk/resource"
-	sdktrace "go.opentelemetry.io/otel/sdk/trace"
-	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
+	"go.uber.org/zap"
 
 	"refresher/trade-refresher/configs"
 	"refresher/trade-refresher/internal/app/handlers"
+	"refresher/trade-refresher/internal/app/services"
 	"refresher/trade-refresher/internal/middleware"
 	"refresher/trade-refresher/internal/routes"
+	"refresher/trade-refresher/internal/utils/azure"
 	"refresher/trade-refresher/internal/utils/log"
 	"refresher/trade-refresher/internal/utils/net"
 )
@@ -23,65 +21,156 @@ import (
 func main() {
 	configs.Load()
 
-	tp := newTracerProvider()
+	app := fiber.New(fiber.Config{
+		BodyLimit:   10 * 1024 * 1024,
+		Concurrency: 256,
+	})
+	middleware.FiberMiddleware(app)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	vault := newVault()
+	limiter := services.NewSharedLimiter(services.RateLimitConfig{
+		ReadPerMinute:  configs.EnvConfigs.AladdinReadMaxRequestsPerMinute,
+		WritePerMinute: configs.EnvConfigs.AladdinWriteMaxRequestsPerMinute,
+		ReadBurst:      configs.EnvConfigs.AladdinReadBurst,
+		WriteBurst:     configs.EnvConfigs.AladdinWriteBurst,
+	})
+	aladdinClient := services.NewAladdinClient(aladdinConfig(), vault, limiter)
+	apiKeyAuth := services.NewAPIKeyAuthenticator(
+		vault,
+		configs.EnvConfigs.KeyVaultTradeRefresherAPIKeyKey,
+		5*time.Minute,
+		"",
+	)
+	if err := apiKeyAuth.Warm(); err != nil {
+		log.Logger.Fatal("api.auth.initialization_failed", zap.Error(err))
+	}
+	tradeHandler := handlers.NewTradeHandler(aladdinClient)
+
+	store, err := newSnowflakeStore(ctx, vault)
+	if err != nil {
+		log.Logger.Fatal("snowflake.initialization_failed", zap.Error(err))
+	}
 	defer func() {
-		if err := tp.Shutdown(context.Background()); err != nil {
-			log.Logger.Error(fmt.Sprintf("unable to shutdown the trace provider: %v", err))
+		if closeErr := store.Close(); closeErr != nil {
+			log.Logger.Error("snowflake.close_failed", zap.Error(closeErr))
 		}
 	}()
 
-	prepare()
+	gemClient := services.NewGemClient(configs.EnvConfigs.GEMURL, configs.EnvConfigs.GEMAPIEnabled)
+	scheduler := services.NewTradeScheduler(schedulerConfig(), aladdinClient, store, gemClient)
+	routes.UtilityRoutes(ctx, app)
+	docsEnabled := configs.DocumentationEnabled()
+	if err := routes.DocsRoutes(app, docsEnabled); err != nil {
+		log.Logger.Fatal("api.docs.initialization_failed", zap.Error(err))
+	}
+	if !docsEnabled {
+		log.Logger.Info("api.docs.disabled")
+	}
+	routes.TradeRoutes(app, tradeHandler, apiKeyAuth)
+	schedulerDone := scheduler.Start(ctx)
 
-	app := fiber.New()
-	middleware.FiberMiddleware(app)
-
-	routes.PublicRoutes(app)
-	routes.PrivateRoutes(app, privateRouteHandlers())
-	routes.UtilityRoutes(app)
-
-	net.StartServer(app)
+	net.StartServerWithGracefulShutdown(app, cancel)
+	cancel()
+	select {
+	case <-schedulerDone:
+	case <-time.After(8 * time.Second):
+		log.Logger.Warn("refresh.scheduler.shutdown_timeout")
+	}
 }
 
-func newTracerProvider() *sdktrace.TracerProvider {
-	exporter, err := stdout.New(stdout.WithPrettyPrint())
+func newVault() azure.Vault {
+	if strings.TrimSpace(configs.EnvConfigs.KeyVaultVelocityURL) == "" {
+		return nil
+	}
+	return azure.NewVault(configs.EnvConfigs.KeyVaultVelocityURL, !strings.EqualFold(configs.EnvConfigs.GoEnvironment, "local"))
+}
+
+func aladdinConfig() services.AladdinClientConfig {
+	return services.AladdinClientConfig{
+		BaseURL:                configs.EnvConfigs.AladdinBaseURL,
+		TradePath:              configs.EnvConfigs.AladdinTradePath,
+		PortfolioGroupPath:     configs.EnvConfigs.AladdinPortfolioGroupPath,
+		OAuthEnabled:           configs.EnvConfigs.AladdinOAuthEnabled,
+		TokenURL:               configs.EnvConfigs.AladdinOAuthTokenURL,
+		Scopes:                 splitScopes(configs.EnvConfigs.AladdinOAuthScopes),
+		ClientIDSecretName:     configs.EnvConfigs.KeyVaultRefresherOAuthClientIDKey,
+		ClientSecretSecretName: configs.EnvConfigs.KeyVaultRefresherOAuthClientSecretKey,
+		CredentialsTTL:         time.Duration(configs.EnvConfigs.AladdinOAuthCredentialsTTLInMinutes) * time.Minute,
+		Timeout:                time.Duration(configs.EnvConfigs.AladdinTimeoutMinutes) * time.Minute,
+		RetryReadAttempts:      configs.EnvConfigs.AladdinRetryMaxAttemptsRead,
+		RetryWriteAttempts:     configs.EnvConfigs.AladdinRetryMaxAttemptsWrite,
+		RetryBaseDelay:         time.Duration(configs.EnvConfigs.AladdinRetryBaseMilliseconds) * time.Millisecond,
+		RetryMaxDelay:          time.Duration(configs.EnvConfigs.AladdinRetryMaxMilliseconds) * time.Millisecond,
+		APIEnabled:             configs.EnvConfigs.AladdinAPIEnabled,
+	}
+}
+
+func newSnowflakeStore(ctx context.Context, vault azure.Vault) (*services.SnowflakeStore, error) {
+	if !configs.EnvConfigs.TradeRefreshEnabled {
+		return services.NewSnowflakeStoreWithDB(nil, services.SnowflakeConfig{}), nil
+	}
+	return services.NewSnowflakeStore(ctx, snowflakeConfig(), vault)
+}
+
+func snowflakeConfig() services.SnowflakeConfig {
+	return services.SnowflakeConfig{
+		Account:            configs.EnvConfigs.SnowflakeAccount,
+		User:               configs.EnvConfigs.SnowflakeUser,
+		Role:               configs.EnvConfigs.SnowflakeRole,
+		Warehouse:          configs.EnvConfigs.SnowflakeWarehouse,
+		Database:           configs.EnvConfigs.SnowflakeDatabase,
+		Schema:             configs.EnvConfigs.SnowflakeSchema,
+		Authenticator:      configs.EnvConfigs.SnowflakeAuthenticator,
+		KeepSessionAlive:   configs.EnvConfigs.SnowflakeKeepSessionAlive,
+		DerSecretName:      configs.EnvConfigs.KeyVaultSnowflakeDERKey,
+		PasswordSecretName: configs.EnvConfigs.KeyVaultSnowflakePasswordKey,
+		TradeTable:         "TRADES",
+		StateTable:         "TRADE_REFRESH_STATE",
+		InsertBatchSize:    configs.EnvConfigs.SnowflakeInsertBatchSize,
+		MaxOpenConns:       configs.EnvConfigs.SnowflakeMaxOpenConns,
+		MaxIdleConns:       configs.EnvConfigs.SnowflakeMaxIdleConns,
+		ConnectionTTL:      time.Duration(configs.EnvConfigs.SnowflakeConnectionTTLInMinutes) * time.Minute,
+	}
+}
+
+func schedulerConfig() services.SchedulerConfig {
+	if !configs.EnvConfigs.TradeRefreshEnabled {
+		return services.SchedulerConfig{Enabled: false}
+	}
+	portfolioFilter, err := services.ParsePortfolioFilter(configs.TradePortfolioFilterValue())
 	if err != nil {
-		log.Logger.Fatal(fmt.Sprintf("unable to create a new OTEL tracer provider: %v", err))
+		log.Logger.Fatal("refresh.portfolio_filter.invalid", zap.Error(err))
 	}
-	tp := sdktrace.NewTracerProvider(
-		sdktrace.WithSampler(sdktrace.AlwaysSample()),
-		sdktrace.WithBatcher(exporter),
-		sdktrace.WithResource(
-			resource.NewWithAttributes(
-				semconv.SchemaURL,
-				semconv.ServiceNameKey.String("trade-refresher"),
-			)),
-	)
-	otel.SetTracerProvider(tp)
-	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
-
-	return tp
+	businessStartMinute, businessEndMinute := configs.TradeRefreshWindowMinutes()
+	return services.SchedulerConfig{
+		Enabled:                       configs.EnvConfigs.TradeRefreshEnabled,
+		Interval:                      time.Duration(configs.EnvConfigs.TradeRefreshIntervalMinutes) * time.Minute,
+		PortfolioFilter:               portfolioFilter,
+		PortfolioGroupRefreshInterval: time.Duration(configs.EnvConfigs.AladdinPortfolioGroupRefreshMinutes) * time.Minute,
+		PageSize:                      configs.EnvConfigs.AladdinTradePageSize,
+		Lookback:                      time.Duration(configs.EnvConfigs.TradeRefreshLookbackSeconds) * time.Second,
+		SafetyDelay:                   time.Duration(configs.EnvConfigs.TradeRefreshSafetyDelaySeconds) * time.Second,
+		BusinessStartMinutePT:         businessStartMinute,
+		BusinessEndMinutePT:           businessEndMinute,
+		MaxCatchup:                    configs.TradeRefreshMaxCatchupDuration(),
+		LockTTL:                       time.Duration(configs.EnvConfigs.TradeRefreshLockTTLSeconds) * time.Second,
+		DecodeWorkers:                 configs.EnvConfigs.TradeDecodeWorkers,
+		GemReportAfterFailures:        configs.EnvConfigs.GEMErrorRetryLimitBeforeReport,
+	}
 }
 
-func prepare() {
-
-}
-
-// privateRouteHandlers configures specific handlers for the non-prod/prod environments.  For some external API calls, there is only a single environment.  For non-production
-// it is recommended to simulate/mock the return responses to avoid resources being consumed/created on external platforms (i.e. GitLab, Permit.IO, etc.)
-func privateRouteHandlers() routes.Handlers {
-	if configs.EnvConfigs.GolangEnvironment.IsLocal() {
-		return routes.Handlers{
-			GetIdentity: handlers.GetIdentity,
+func splitScopes(value string) []string {
+	fields := strings.FieldsFunc(value, func(r rune) bool {
+		return r == ',' || r == ' ' || r == '\n' || r == '\t'
+	})
+	scopes := make([]string, 0, len(fields))
+	for _, field := range fields {
+		if trimmed := strings.TrimSpace(field); trimmed != "" {
+			scopes = append(scopes, trimmed)
 		}
 	}
-
-	if configs.EnvConfigs.GolangEnvironment.IsProduction() {
-		return routes.Handlers{
-			GetIdentity: handlers.GetIdentity,
-		}
-	}
-
-	return routes.Handlers{
-		GetIdentity: handlers.GetIdentity,
-	}
+	return scopes
 }

@@ -1,0 +1,19 @@
+FROM golang:1.24
+
+ARG PACKAGE_CONFIG=package-name-release
+
+WORKDIR /
+
+RUN mkdir -p /assets
+RUN mkdir -p /go/bin/env
+
+COPY $PACKAGE_CONFIG /go/bin
+COPY env/ /go/bin/env
+
+RUN chmod a+x /go/bin/$PACKAGE_CONFIG
+
+ENV PACKAGE_NAME=$PACKAGE_CONFIG
+
+EXPOSE 8080
+
+ENTRYPOINT ["sh", "-c", "exec /go/bin/$PACKAGE_NAME"]

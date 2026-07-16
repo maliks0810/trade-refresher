@@ -1,7 +1,7 @@
 include:
   - project: 'tcw-group/technology/platform-engineering/development-operations/cicd-configurations'
     ref: 'main'
-    file: '/go/pipelines/x1/go.webservice.cloud.default.pipeline.yml'
+    file: '/go/pipelines/v4/go-refresher.cloud.pipeline.yml'
 
 variables:
   PROJECT_NAME: 'trade-refresher'
@@ -9,26 +9,26 @@ variables:
   OPEN_API_DOCUMENTATION: ''
 
   ## AKS Tags ####################################################################################
-  APPLICATION_OWNER: 'engineering-solutions'
+  APPLICATION_OWNER: 'data-engineering'
   APPLICATION_TYPE: 'trade-refresher'
-  APPLICATION_SENSITIVITY: 'private'
+  APPLICATION_SENSITIVITY: 'confidential'
   ################################################################################################
-  
+
   ## DOCKER CONFIGURATIONS ########################################################################
   CUSTOM_DOCKERFILE: 'false'
   #################################################################################################
 
   ## DNS Configurations ###########################################################################
-  ENABLE_TLS: 'false'
-  DOMAIN: trade-refresher 
+  ENABLE_TLS: 'true'
+  DOMAIN: trade-refresher
   #################################################################################################
 
   ## Workload Identity Configurations #############################################################
-  ENABLE_WORKLOAD_IDENTITY: 'false'
-  NONPROD_AZURE_CLIENT_ID: 
-  NONPROD_K8S_SERVICE_ACCT: 
-  PROD_AZURE_CLIENT_ID: 
-  PROD_K8S_SERVICE_ACCT: 
+  ENABLE_WORKLOAD_IDENTITY: 'true'
+  NONPROD_AZURE_CLIENT_ID: '6bdee225-974c-48b2-9ab1-c8ff85b88552'
+  NONPROD_K8S_SERVICE_ACCT: 'sa-np-positionrefresher'
+  PROD_AZURE_CLIENT_ID: 'ed38f1c8-212c-4ac8-8607-02945a6b56fc'
+  PROD_K8S_SERVICE_ACCT: 'sa-pd-positionrefresher'
   #################################################################################################
 
   ## Authorization Configurations #################################################################

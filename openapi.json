@@ -1,0 +1,2692 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "description": "Post, cancel, filter and retrieve trade(s) based on request parameters.",
+    "title": "Trade",
+    "version": "2.0.0",
+    "x-aladdin-api-id": "agraph.trading.trade_processing.trade.TradeAPI",
+    "x-aladdin-api-stability": "alpha",
+    "x-aladdin-spec-id": "agraph.trading.trade_processing.trade.v2.TradeAPI"
+  },
+  "paths": {
+    "/longrunningoperations/{id}": {
+      "get": {
+        "description": "Poll for the result of a long-running operation.",
+        "operationId": "TradeAPI_GetLongrunningOperation",
+        "parameters": [
+          {
+            "description": "A unique identifier for this request.",
+            "in": "header",
+            "name": "VND.com.blackrock.Request-ID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "UUID"
+            }
+          },
+          {
+            "description": "Timestamp assigned to this request at origin, in \"HTTP-date\" format as defined by RFC 7231.",
+            "in": "header",
+            "name": "VND.com.blackrock.Origin-Timestamp",
+            "required": true,
+            "example": "2026-07-01 12:26:13.499",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "description": "Id of the LongrunningOperation",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "headers": {
+              "VND.com.blackrock.Request-ID": {
+                "description": "The unique identifier assigned by the client to the request that originated this response.",
+                "schema": {
+                  "type": "string",
+                  "format": "UUID"
+                }
+              },
+              "VND.com.blackrock.Response-ID": {
+                "description": "A Unique Identifier for this response.",
+                "schema": {
+                  "type": "string",
+                  "format": "UUID"
+                }
+              },
+              "VND.com.blackrock.Response-Timestamp": {
+                "description": "Timestamp assigned to this response, in \"HTTP-date\" format as defined by RFC 7231.",
+                "example": "2026-07-01 12:26:13.499",
+                "schema": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            },
+            "x-aladdin-lro": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v1LongrunningOperation"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          }
+        },
+        "summary": "Get the long-running operation results",
+        "x-access-type": "READ",
+        "x-quota-limit": 1000
+      }
+    },
+    "/trades:batchCancel": {
+      "post": {
+        "description": "Cancels multiple trades based on a list of TradeKeys and a shared CancelTradeConfig, returning a long‑running operation that exposes per‑trade cancel results when completed.",
+        "operationId": "TradeAPI_BatchCancelTrades",
+        "parameters": [
+          {
+            "description": "A unique identifier for this request.",
+            "in": "header",
+            "name": "VND.com.blackrock.Request-ID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "UUID"
+            }
+          },
+          {
+            "description": "Timestamp assigned to this request at origin, in \"HTTP-date\" format as defined by RFC 7231.",
+            "in": "header",
+            "name": "VND.com.blackrock.Origin-Timestamp",
+            "required": true,
+            "example": "2026-07-01 12:26:13.499",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/tradev2BatchCancelTradesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "headers": {
+              "VND.com.blackrock.Request-ID": {
+                "description": "The unique identifier assigned by the client to the request that originated this response.",
+                "schema": {
+                  "type": "string",
+                  "format": "UUID"
+                }
+              },
+              "VND.com.blackrock.Response-ID": {
+                "description": "A Unique Identifier for this response.",
+                "schema": {
+                  "type": "string",
+                  "format": "UUID"
+                }
+              },
+              "VND.com.blackrock.Response-Timestamp": {
+                "description": "Timestamp assigned to this response, in \"HTTP-date\" format as defined by RFC 7231.",
+                "example": "2026-07-01 12:26:13.499",
+                "schema": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            },
+            "x-aladdin-lro": {
+              "meta-data-type": {
+                "description": "Meta data related to a BatchCancelTradesResponse.",
+                "type": "object"
+              },
+              "response-type": {
+                "description": "Returns the per-trade outcomes for a batch cancel operation, with each TradeResult indicating whether a given trade was successfully cancelled or failed.",
+                "properties": {
+                  "results": {
+                    "description": "Contains the results of the batch cancel trades operation.",
+                    "items": {
+                      "$ref": "#/components/schemas/tradev2TradeResult"
+                    },
+                    "type": "array"
+                  }
+                },
+                "type": "object"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v1LongrunningOperation_BatchCancelTrades"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          }
+        },
+        "summary": "Cancel trades",
+        "x-access-type": "WRITE",
+        "x-quota-limit": 250
+      }
+    },
+    "/trades:batchPost": {
+      "post": {
+        "description": "Post or update multiple trades, returning a long‑running operation that exposes per‑trade post or update results when completed.",
+        "operationId": "TradeAPI_BatchPostTrades",
+        "parameters": [
+          {
+            "description": "A unique identifier for this request.",
+            "in": "header",
+            "name": "VND.com.blackrock.Request-ID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "UUID"
+            }
+          },
+          {
+            "description": "Timestamp assigned to this request at origin, in \"HTTP-date\" format as defined by RFC 7231.",
+            "in": "header",
+            "name": "VND.com.blackrock.Origin-Timestamp",
+            "required": true,
+            "example": "2026-07-01 12:26:13.499",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/tradev2BatchPostTradesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "headers": {
+              "VND.com.blackrock.Request-ID": {
+                "description": "The unique identifier assigned by the client to the request that originated this response.",
+                "schema": {
+                  "type": "string",
+                  "format": "UUID"
+                }
+              },
+              "VND.com.blackrock.Response-ID": {
+                "description": "A Unique Identifier for this response.",
+                "schema": {
+                  "type": "string",
+                  "format": "UUID"
+                }
+              },
+              "VND.com.blackrock.Response-Timestamp": {
+                "description": "Timestamp assigned to this response, in \"HTTP-date\" format as defined by RFC 7231.",
+                "example": "2026-07-01 12:26:13.499",
+                "schema": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            },
+            "x-aladdin-lro": {
+              "meta-data-type": {
+                "description": "Meta data related to a BatchPostTradesResponse.",
+                "type": "object"
+              },
+              "response-type": {
+                "description": "Represents the response for the BatchPostTrades, indicating posting status for each trade.",
+                "properties": {
+                  "results": {
+                    "description": "Contains the results of the batch post trades operation.",
+                    "items": {
+                      "$ref": "#/components/schemas/tradev2TradeResult"
+                    },
+                    "type": "array"
+                  }
+                },
+                "type": "object"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/v1LongrunningOperation_BatchPostTrades"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          }
+        },
+        "summary": "Post or update trades",
+        "x-access-type": "WRITE",
+        "x-quota-limit": 250
+      }
+    },
+    "/trades:cancel": {
+      "post": {
+        "description": "Cancels a single trade identified by its Trade Key (Invnum and Portfolio Reference).",
+        "operationId": "TradeAPI_CancelTrade",
+        "parameters": [
+          {
+            "description": "A unique identifier for this request.",
+            "in": "header",
+            "name": "VND.com.blackrock.Request-ID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "UUID"
+            }
+          },
+          {
+            "description": "Timestamp assigned to this request at origin, in \"HTTP-date\" format as defined by RFC 7231.",
+            "in": "header",
+            "name": "VND.com.blackrock.Origin-Timestamp",
+            "required": true,
+            "example": "2026-07-01 12:26:13.499",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/tradev2CancelTradeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "headers": {
+              "VND.com.blackrock.Request-ID": {
+                "description": "The unique identifier assigned by the client to the request that originated this response.",
+                "schema": {
+                  "type": "string",
+                  "format": "UUID"
+                }
+              },
+              "VND.com.blackrock.Response-ID": {
+                "description": "A Unique Identifier for this response.",
+                "schema": {
+                  "type": "string",
+                  "format": "UUID"
+                }
+              },
+              "VND.com.blackrock.Response-Timestamp": {
+                "description": "Timestamp assigned to this response, in \"HTTP-date\" format as defined by RFC 7231.",
+                "example": "2026-07-01 12:26:13.499",
+                "schema": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/tradev2CancelTradeResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          }
+        },
+        "summary": "Cancel trade",
+        "x-access-type": "WRITE",
+        "x-quota-limit": 250
+      }
+    },
+    "/trades:filter": {
+      "post": {
+        "description": "Filter trades using flexible portfolio, date/time, trade, asset, and broker filters, returns a paginated result set that can be enriched with related trade data via options and expands.",
+        "operationId": "TradeAPI_FilterTrades",
+        "parameters": [
+          {
+            "description": "A unique identifier for this request.",
+            "in": "header",
+            "name": "VND.com.blackrock.Request-ID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "UUID"
+            }
+          },
+          {
+            "description": "Timestamp assigned to this request at origin, in \"HTTP-date\" format as defined by RFC 7231.",
+            "in": "header",
+            "name": "VND.com.blackrock.Origin-Timestamp",
+            "required": true,
+            "example": "2026-07-01 12:26:13.499",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/tradev2FilterTradesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "headers": {
+              "VND.com.blackrock.Request-ID": {
+                "description": "The unique identifier assigned by the client to the request that originated this response.",
+                "schema": {
+                  "type": "string",
+                  "format": "UUID"
+                }
+              },
+              "VND.com.blackrock.Response-ID": {
+                "description": "A Unique Identifier for this response.",
+                "schema": {
+                  "type": "string",
+                  "format": "UUID"
+                }
+              },
+              "VND.com.blackrock.Response-Timestamp": {
+                "description": "Timestamp assigned to this response, in \"HTTP-date\" format as defined by RFC 7231.",
+                "example": "2026-07-01 12:26:13.499",
+                "schema": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/tradev2FilterTradesResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          }
+        },
+        "summary": "Filter trade by criteria",
+        "x-access-type": "READ",
+        "x-quota-limit": 1000
+      }
+    },
+    "/trades:post": {
+      "post": {
+        "description": "Creates a new trade or updates an existing one in Aladdin using the supplied payload. Returns a snippet of the updated trade details on success, or an error object describing the failure.",
+        "operationId": "TradeAPI_PostTrade",
+        "parameters": [
+          {
+            "description": "A unique identifier for this request.",
+            "in": "header",
+            "name": "VND.com.blackrock.Request-ID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "UUID"
+            }
+          },
+          {
+            "description": "Timestamp assigned to this request at origin, in \"HTTP-date\" format as defined by RFC 7231.",
+            "in": "header",
+            "name": "VND.com.blackrock.Origin-Timestamp",
+            "required": true,
+            "example": "2026-07-01 12:26:13.499",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/tradev2PostTradeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "headers": {
+              "VND.com.blackrock.Request-ID": {
+                "description": "The unique identifier assigned by the client to the request that originated this response.",
+                "schema": {
+                  "type": "string",
+                  "format": "UUID"
+                }
+              },
+              "VND.com.blackrock.Response-ID": {
+                "description": "A Unique Identifier for this response.",
+                "schema": {
+                  "type": "string",
+                  "format": "UUID"
+                }
+              },
+              "VND.com.blackrock.Response-Timestamp": {
+                "description": "Timestamp assigned to this response, in \"HTTP-date\" format as defined by RFC 7231.",
+                "example": "2026-07-01 12:26:13.499",
+                "schema": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/tradev2PostTradeResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          }
+        },
+        "summary": "Post or update trade",
+        "x-access-type": "WRITE",
+        "x-quota-limit": 250
+      }
+    },
+    "/trades:retrieve": {
+      "post": {
+        "description": "Retrieves trades by trade keys, external references, or order identifiers (optionally with expanded asset data) and an overall processing status.",
+        "operationId": "TradeAPI_RetrieveTrades",
+        "parameters": [
+          {
+            "description": "A unique identifier for this request.",
+            "in": "header",
+            "name": "VND.com.blackrock.Request-ID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "UUID"
+            }
+          },
+          {
+            "description": "Timestamp assigned to this request at origin, in \"HTTP-date\" format as defined by RFC 7231.",
+            "in": "header",
+            "name": "VND.com.blackrock.Origin-Timestamp",
+            "required": true,
+            "example": "2026-07-01 12:26:13.499",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/tradev2RetrieveTradesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "headers": {
+              "VND.com.blackrock.Request-ID": {
+                "description": "The unique identifier assigned by the client to the request that originated this response.",
+                "schema": {
+                  "type": "string",
+                  "format": "UUID"
+                }
+              },
+              "VND.com.blackrock.Response-ID": {
+                "description": "A Unique Identifier for this response.",
+                "schema": {
+                  "type": "string",
+                  "format": "UUID"
+                }
+              },
+              "VND.com.blackrock.Response-Timestamp": {
+                "description": "Timestamp assigned to this response, in \"HTTP-date\" format as defined by RFC 7231.",
+                "example": "2026-07-01 12:26:13.499",
+                "schema": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/tradev2RetrieveTradesResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          }
+        },
+        "summary": "Retrieve trade by key criteria",
+        "x-access-type": "READ",
+        "x-quota-limit": 1000
+      }
+    }
+  },
+  "x-access-level": "Public",
+  "servers": [
+    {
+      "url": "https://tcw.blackrock.com/api/trading/trade-processing/trade/v2"
+    }
+  ],
+  "components": {
+    "responses": {
+      "400": {
+        "description": "Aladdin® will not process the request due to an apparent client error.",
+        "headers": {
+          "VND.com.blackrock.Request-ID": {
+            "description": "The unique identifier assigned by the client to the request that originated this response.",
+            "schema": {
+              "type": "string",
+              "format": "UUID"
+            }
+          },
+          "VND.com.blackrock.Response-ID": {
+            "description": "A Unique Identifier for this response.",
+            "schema": {
+              "type": "string",
+              "format": "UUID"
+            }
+          },
+          "VND.com.blackrock.Response-Timestamp": {
+            "description": "Timestamp assigned to this response, in \"HTTP-date\" format as defined by RFC 7231.",
+            "example": "2026-07-01 12:26:13.499",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "description": "Defines an error that occurred.",
+              "properties": {
+                "code": {
+                  "description": "A short mnemonic reference code for the error.",
+                  "maxLength": 40,
+                  "type": "string"
+                },
+                "message": {
+                  "description": "A human readable description of the error.",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code",
+                "message"
+              ],
+              "type": "object"
+            }
+          }
+        }
+      },
+      "401": {
+        "description": "Aladdin® will not process the request as the necessary credentials were not provided or were invalid.",
+        "headers": {
+          "VND.com.blackrock.Request-ID": {
+            "description": "The unique identifier assigned by the client to the request that originated this response.",
+            "schema": {
+              "type": "string",
+              "format": "UUID"
+            }
+          },
+          "VND.com.blackrock.Response-ID": {
+            "description": "A Unique Identifier for this response.",
+            "schema": {
+              "type": "string",
+              "format": "UUID"
+            }
+          },
+          "VND.com.blackrock.Response-Timestamp": {
+            "description": "Timestamp assigned to this response, in \"HTTP-date\" format as defined by RFC 7231.",
+            "example": "2026-07-01 12:26:13.499",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "description": "Defines an error that occurred.",
+              "properties": {
+                "code": {
+                  "description": "A short mnemonic reference code for the error.",
+                  "maxLength": 40,
+                  "type": "string"
+                },
+                "message": {
+                  "description": "A human readable description of the error.",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code",
+                "message"
+              ],
+              "type": "object"
+            }
+          }
+        }
+      },
+      "403": {
+        "description": "Aladdin® understood the request but is refusing to authorize it.",
+        "headers": {
+          "VND.com.blackrock.Request-ID": {
+            "description": "The unique identifier assigned by the client to the request that originated this response.",
+            "schema": {
+              "type": "string",
+              "format": "UUID"
+            }
+          },
+          "VND.com.blackrock.Response-ID": {
+            "description": "A Unique Identifier for this response.",
+            "schema": {
+              "type": "string",
+              "format": "UUID"
+            }
+          },
+          "VND.com.blackrock.Response-Timestamp": {
+            "description": "Timestamp assigned to this response, in \"HTTP-date\" format as defined by RFC 7231.",
+            "example": "2026-07-01 12:26:13.499",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "description": "Defines an error that occurred.",
+              "properties": {
+                "code": {
+                  "description": "A short mnemonic reference code for the error.",
+                  "maxLength": 40,
+                  "type": "string"
+                },
+                "message": {
+                  "description": "A human readable description of the error.",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code",
+                "message"
+              ],
+              "type": "object"
+            }
+          }
+        }
+      },
+      "429": {
+        "description": "Aladdin® is refusing to process the request because the client has exceeded the rate limit.",
+        "headers": {
+          "VND.com.blackrock.Request-ID": {
+            "description": "The unique identifier assigned by the client to the request that originated this response.",
+            "schema": {
+              "type": "string",
+              "format": "UUID"
+            }
+          },
+          "VND.com.blackrock.Response-ID": {
+            "description": "A Unique Identifier for this response.",
+            "schema": {
+              "type": "string",
+              "format": "UUID"
+            }
+          },
+          "VND.com.blackrock.Response-Timestamp": {
+            "description": "Timestamp assigned to this response, in \"HTTP-date\" format as defined by RFC 7231.",
+            "example": "2026-07-01 12:26:13.499",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "description": "Defines an error that occurred.",
+              "properties": {
+                "code": {
+                  "description": "A short mnemonic reference code for the error.",
+                  "maxLength": 40,
+                  "type": "string"
+                },
+                "message": {
+                  "description": "A human readable description of the error.",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code",
+                "message"
+              ],
+              "type": "object"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "Any": {
+        "description": "`Any` contains an arbitrary serialized message along with a\nURL that describes the type of the serialized message",
+        "properties": {
+          "@type": {
+            "description": "A URL/resource name that uniquely identifies the type of the serialized message.",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "TradeFXLegsFXLeg": {
+        "properties": {
+          "currencyCode": {
+            "title": "Price Currency",
+            "type": "string"
+          },
+          "settlementInstruction": {
+            "format": "int32",
+            "title": "Settlement instruction",
+            "type": "integer"
+          }
+        },
+        "title": "FX Leg details",
+        "type": "object"
+      },
+      "agraphcommoncommonreferencesportfolioPortfolioReference": {
+        "description": "Reference to a portfolio. This includes both the portfolio ID and the portfolio ticker. \nFor read operations, both fields are returned. \nFor write operations, only one of the two is required. \nIf both are provided, the portfolio ID takes precedence over the portfolio ticker.",
+        "properties": {
+          "portfolioId": {
+            "title": "portfolio id",
+            "type": "string"
+          },
+          "portfolioTicker": {
+            "title": "portfolio ticker",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "googlerpcStatus": {
+        "description": "The `Status` type defines a logical error model that is suitable for\ndifferent programming environments, including REST APIs and RPC APIs. It is\nused by [gRPC](https://github.com/grpc). Each `Status` message contains\nthree pieces of data: error code, error message, and error details.\n\nYou can find out more about this error model and how to work with it in the\n[API Design Guide](https://cloud.google.com/apis/design/errors).",
+        "properties": {
+          "code": {
+            "description": "The status code, which should be an enum value of [google.rpc.Code][google.rpc.Code].",
+            "format": "int32",
+            "type": "integer"
+          },
+          "details": {
+            "description": "A list of messages that carry the error details.  There is a common set of\nmessage types for APIs to use.",
+            "items": {
+              "$ref": "#/components/schemas/Any"
+            },
+            "type": "array"
+          },
+          "message": {
+            "description": "A developer-facing error message, which should be in English. Any\nuser-facing error message should be localized and sent in the\n[google.rpc.Status.details][google.rpc.Status.details] field, or localized by the client.",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "referencesassetAssetReference": {
+        "properties": {
+          "assetId": {
+            "title": "asset id",
+            "type": "string"
+          },
+          "bloombergTicker": {
+            "title": "Unique identifier used by Bloomberg to represent a security which typically includes the security name and exchange code",
+            "type": "string"
+          },
+          "cins": {
+            "title": "Variant of CUSIP used for international securities outside North America",
+            "type": "string"
+          },
+          "cusip": {
+            "title": "9-character alphanumeric code used to identify North American financial securities (S&P CUSIP)",
+            "type": "string"
+          },
+          "isin": {
+            "title": "12-character alphanumeric code that uniquely identifies a fixed income security across global markets",
+            "type": "string"
+          },
+          "sedol": {
+            "title": "7-character alphanumeric code assigned to securities listed on stock exchanges",
+            "type": "string"
+          }
+        },
+        "title": "Reference to an asset. It is a one of asset_id",
+        "type": "object"
+      },
+      "referencesbrokerBrokerReference": {
+        "description": "Reference to a broker: this include the broker id, broker ticker and broker shortname.\nFor read operations, all fields are returned.\nFor write operations, at least one field is required. If multiple fields are provided, broker_id takes precedence followed by broker_shortname.",
+        "properties": {
+          "brokerId": {
+            "title": "broker id",
+            "type": "string"
+          },
+          "brokerShortname": {
+            "title": "broker shortname - display name for the broker across Aladdin apps",
+            "type": "string"
+          },
+          "brokerTicker": {
+            "title": "broker ticker",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "referencesstrategyStrategyReference": {
+        "description": "Reference to a strategy. This includes both the strategy ID and strategy name.\nFor read operations, both fields are returned.\nFor write operations, at least one field is required. If both are provided, strategy_id takes precedence.",
+        "properties": {
+          "strategyId": {
+            "title": "strategy id",
+            "type": "string"
+          },
+          "strategyName": {
+            "description": "The display name of the strategy.\nIf the strategy has a parent, the name must be prefixed with the parent name, separated by a colon.\nExample: \"US : BONDS\" (where \"US\" is the parent strategy).",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "trade_processingtradev2PriceType": {
+        "default": "PRICE_TYPE_UNSPECIFIED",
+        "description": "- PRICE_TYPE_UNSPECIFIED: No value specified\n - PRICE_TYPE_DIRTY: Price Type - Dirty\n - PRICE_TYPE_YIELD: Price Type - Yield\n - PRICE_TYPE_CLEAN: Price Type - Clean\n - PRICE_TYPE_AMORTIZED: Price Type - Amortized\n - PRICE_TYPE_AMORTIZED_DIRTY: Price Type - Amortized and Dirty\n - PRICE_TYPE_DISCOUNTED: Price Type - Discounted",
+        "enum": [
+          "PRICE_TYPE_UNSPECIFIED",
+          "PRICE_TYPE_DIRTY",
+          "PRICE_TYPE_YIELD",
+          "PRICE_TYPE_CLEAN",
+          "PRICE_TYPE_AMORTIZED",
+          "PRICE_TYPE_AMORTIZED_DIRTY",
+          "PRICE_TYPE_DISCOUNTED"
+        ],
+        "title": "Price Type for the trade price",
+        "type": "string"
+      },
+      "tradev2AssetCriterion": {
+        "description": "It represents asset-specific criteria.",
+        "properties": {
+          "assetIds": {
+            "description": "A comma-separated list of Aladdin CUSIPs. The default limit is 10 CUSIPs.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "classifications": {
+            "description": "A list of asset classification, such as security group, type, etc.",
+            "items": {
+              "$ref": "#/components/schemas/tradev2AssetCriterionClassification"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "tradev2AssetCriterionClassification": {
+        "description": "It represents the classification of an asset. At least security group must be passed to fetch asset(s).",
+        "properties": {
+          "securityGroup": {
+            "description": "Security group.",
+            "type": "string"
+          },
+          "securityType": {
+            "description": "Security type.",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "tradev2AssetExpand": {
+        "properties": {
+          "reference": {
+            "$ref": "#/components/schemas/referencesassetAssetReference"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/tradev2AssetSummary"
+          }
+        },
+        "title": "Asset Expand",
+        "type": "object"
+      },
+      "tradev2AssetSummary": {
+        "properties": {
+          "issueCountryCode": {
+            "title": "Asset Trading market an ISO code to identify markets, minimum length = 2, maximum length = 6",
+            "type": "string"
+          },
+          "reference": {
+            "$ref": "#/components/schemas/referencesassetAssetReference"
+          },
+          "securityCurrency": {
+            "title": "Security currency of an asset",
+            "type": "string"
+          },
+          "securityGroup": {
+            "title": "Security group of an asset",
+            "type": "string"
+          },
+          "securityType": {
+            "title": "Security type of an asset",
+            "type": "string"
+          }
+        },
+        "title": "Asset summary describe the security information",
+        "type": "object"
+      },
+      "tradev2BatchCancelTradesMetaData": {
+        "description": "Meta data related to a BatchCancelTradesResponse.",
+        "type": "object"
+      },
+      "tradev2BatchCancelTradesRequest": {
+        "description": "Specifies a batch of trades to be cancelled, along with configuration controlling how the cancellations are processed.",
+        "properties": {
+          "config": {
+            "$ref": "#/components/schemas/v2CancelTradeConfig"
+          },
+          "tradeKeys": {
+            "description": "List of trades to be cancelled. At least one trade must be specified.\nUsers are advised to use small batch sizes and increase parallelism for performance.",
+            "items": {
+              "$ref": "#/components/schemas/v2TradeKey"
+            },
+            "required": [
+              "trade_keys"
+            ],
+            "type": "array"
+          }
+        },
+        "required": [
+          "tradeKeys"
+        ],
+        "type": "object"
+      },
+      "tradev2BatchCancelTradesResponse": {
+        "description": "Returns the per-trade outcomes for a batch cancel operation, with each TradeResult indicating whether a given trade was successfully cancelled or failed.",
+        "properties": {
+          "results": {
+            "description": "Contains the results of the batch cancel trades operation.",
+            "items": {
+              "$ref": "#/components/schemas/tradev2TradeResult"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "tradev2BatchPostTradesMetaData": {
+        "description": "Meta data related to a BatchPostTradesResponse.",
+        "type": "object"
+      },
+      "tradev2BatchPostTradesRequest": {
+        "description": "Represents a batch of BlockTrades to be created or updated, enhanced by PostTradeConfig that controls how posting is applied across all trades.",
+        "properties": {
+          "blockTrades": {
+            "description": "List of trades to be posted. At least one trade must be specified.\nUsers are advised to use small batch sizes and increase parallelism for performance.",
+            "items": {
+              "$ref": "#/components/schemas/tradev2BlockTrade"
+            },
+            "required": [
+              "block_trades"
+            ],
+            "type": "array"
+          },
+          "config": {
+            "$ref": "#/components/schemas/v2PostTradeConfig"
+          }
+        },
+        "required": [
+          "blockTrades"
+        ],
+        "type": "object"
+      },
+      "tradev2BatchPostTradesResponse": {
+        "description": "Represents the response for the BatchPostTrades, indicating posting status for each trade.",
+        "properties": {
+          "results": {
+            "description": "Contains the results of the batch post trades operation.",
+            "items": {
+              "$ref": "#/components/schemas/tradev2TradeResult"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "tradev2BlockTrade": {
+        "description": "Represents a block trade that contains one or more allocation-level trades.",
+        "properties": {
+          "accountingDesignation": {
+            "description": "Trade accounting designation.",
+            "type": "string"
+          },
+          "actualSettlementDate": {
+            "description": "Actual settlement date in ISO 8601 date format YYYY-MM-DD (e.g.  \"2026-01-17\").",
+            "format": "date",
+            "type": "string",
+            "example": "2026-07-01"
+          },
+          "asset": {
+            "$ref": "#/components/schemas/tradev2AssetExpand"
+          },
+          "assetReference": {
+            "$ref": "#/components/schemas/referencesassetAssetReference"
+          },
+          "authorizedTime": {
+            "format": "date-time",
+            "readOnly": true,
+            "title": "Trade authorized time. (Output only field)",
+            "type": "string",
+            "example": "2026-07-01 12:26:13.499"
+          },
+          "brokerDeskId": {
+            "title": "Broker desk",
+            "type": "string"
+          },
+          "brokerReason": {
+            "title": "Broker reason",
+            "type": "string"
+          },
+          "brokerReference": {
+            "$ref": "#/components/schemas/referencesbrokerBrokerReference"
+          },
+          "collateralExposureType": {
+            "description": "Collateral exposure type.",
+            "type": "string"
+          },
+          "confirmedBy": {
+            "title": "Trade confirmed by initials",
+            "type": "string"
+          },
+          "confirmedWith": {
+            "title": "Trade confirmed with - external party which confirms the trade",
+            "type": "string"
+          },
+          "convexity": {
+            "description": "Convexity of the security at time of trade execution.",
+            "format": "double",
+            "type": "number"
+          },
+          "coupon": {
+            "format": "double",
+            "title": "Trade coupon",
+            "type": "number"
+          },
+          "couponType": {
+            "description": "Coupon type.",
+            "type": "string"
+          },
+          "daysToMaturity2a7": {
+            "description": "Days to maturity as defined by financial rule 2a7 (output only field).",
+            "format": "int32",
+            "readOnly": true,
+            "type": "integer"
+          },
+          "dealingCapacity": {
+            "title": "Dealing capacity of the broker",
+            "type": "string"
+          },
+          "dropRate": {
+            "format": "double",
+            "title": "Drop rate",
+            "type": "number"
+          },
+          "duration": {
+            "description": "Trade duration.",
+            "format": "double",
+            "type": "number"
+          },
+          "effectiveRate": {
+            "description": "Effective financing rate for rolls. Also stores commission-adjusted yield for issues.",
+            "format": "double",
+            "type": "number"
+          },
+          "enteredBy": {
+            "title": "Initials for trade enterer",
+            "type": "string"
+          },
+          "entryTime": {
+            "description": "Trade entry timestamp in RFC 3339 format (e.g.  \"2026-01-14T15:42:10Z\") (output only).",
+            "format": "date-time",
+            "readOnly": true,
+            "type": "string",
+            "example": "2026-07-01 12:26:13.499"
+          },
+          "executingBrokerDeskId": {
+            "description": "Executing broker desk.",
+            "type": "string"
+          },
+          "executingBrokerReference": {
+            "$ref": "#/components/schemas/referencesbrokerBrokerReference"
+          },
+          "executionTime": {
+            "format": "date-time",
+            "title": "Executed timestamp",
+            "type": "string",
+            "example": "2026-07-01 12:26:13.499"
+          },
+          "executionTimeSource": {
+            "$ref": "#/components/schemas/tradev2ExecutionTimeSource"
+          },
+          "factor": {
+            "description": "Factor applied to the trade (e.g. \"1\").",
+            "format": "double",
+            "type": "number"
+          },
+          "factorDate": {
+            "format": "date",
+            "title": "Trade factor date",
+            "type": "string",
+            "example": "2026-07-01"
+          },
+          "forwardAssetReference": {
+            "$ref": "#/components/schemas/referencesassetAssetReference"
+          },
+          "forwardPoints": {
+            "description": "Forward Points (Input only field).",
+            "format": "double",
+            "type": "number"
+          },
+          "forwardPrice": {
+            "description": "Forward Price (Input only field).",
+            "format": "double",
+            "type": "number"
+          },
+          "fxSpotPrice": {
+            "description": "FX Spot Price (Input only field).",
+            "format": "double",
+            "type": "number"
+          },
+          "multiFundId": {
+            "format": "int32",
+            "readOnly": true,
+            "title": "Multi fund id used to map BlockTrades in Aladdin. (Output only field)",
+            "type": "integer"
+          },
+          "percentYield": {
+            "description": "Trade yield expressed as a percentage.",
+            "format": "double",
+            "type": "number"
+          },
+          "placementId": {
+            "description": "Placement ID associated with the trade (output only).",
+            "readOnly": true,
+            "type": "string"
+          },
+          "poolStipulations": {
+            "title": "Pool Stipulations",
+            "type": "string"
+          },
+          "prepayType": {
+            "description": "Prepayment type per PREPAY_MAPPING decode (output only).",
+            "readOnly": true,
+            "type": "string"
+          },
+          "price": {
+            "description": "Block-level price applied to the trades.",
+            "format": "double",
+            "type": "number"
+          },
+          "priceType": {
+            "$ref": "#/components/schemas/trade_processingtradev2PriceType"
+          },
+          "pricingIndex": {
+            "title": "Trade pricing index",
+            "type": "string"
+          },
+          "pricingSpread": {
+            "description": "The normal pricing spread which is captured in basis points.",
+            "format": "double",
+            "type": "number"
+          },
+          "psa": {
+            "description": "Prepayment rate (output only).",
+            "format": "double",
+            "readOnly": true,
+            "type": "number"
+          },
+          "purpose": {
+            "description": "Trade purpose per TrdPurpose decode.",
+            "type": "string"
+          },
+          "reinvestmentRate": {
+            "description": "Reinvestment rate associated with the trade.",
+            "format": "double",
+            "type": "number"
+          },
+          "reviewTime": {
+            "description": "Trade review timestamp in RFC 3339 format (e.g.  \"2026-01-14T19:10:00Z\") (output only).",
+            "format": "date-time",
+            "readOnly": true,
+            "type": "string",
+            "example": "2026-07-01 12:26:13.499"
+          },
+          "settlementCurrency": {
+            "description": "Currency used for settlement (e.g.  \"USD\").",
+            "type": "string"
+          },
+          "settlementCurrencyPair": {
+            "description": "Settlement Exchange Rate Currency Pair (Input only field).",
+            "type": "string"
+          },
+          "settlementDate": {
+            "description": "Settlement date in ISO 8601 date format YYYY-MM-DD (e.g.  \"2026-01-16\").",
+            "format": "date",
+            "type": "string",
+            "example": "2026-07-01"
+          },
+          "settlementFxRate": {
+            "description": "Settlement FX rate.",
+            "format": "double",
+            "type": "number"
+          },
+          "status": {
+            "description": "Trade status: C for cancelled (output only).",
+            "readOnly": true,
+            "type": "string"
+          },
+          "suppressExternalNotification": {
+            "description": "Whether to suppress external notifications for this trade.",
+            "type": "boolean"
+          },
+          "swapPoints": {
+            "format": "double",
+            "title": "Swap Points. (Input only field)",
+            "type": "number"
+          },
+          "tbaStipulations": {
+            "title": "TBA Stipulations",
+            "type": "string"
+          },
+          "touchCount": {
+            "description": "Trade touch count (Output only field).",
+            "format": "int32",
+            "readOnly": true,
+            "type": "integer"
+          },
+          "tradeComments": {
+            "description": "Trade comments.",
+            "items": {
+              "$ref": "#/components/schemas/tradev2TradeComment"
+            },
+            "type": "array"
+          },
+          "tradeDate": {
+            "format": "date",
+            "title": "Trade date",
+            "type": "string",
+            "example": "2026-07-01"
+          },
+          "tradeDiscountPrice": {
+            "description": "Discount price for the trade (output only field).",
+            "format": "double",
+            "readOnly": true,
+            "type": "number"
+          },
+          "tradeQuotes": {
+            "description": "Trade quotes.",
+            "items": {
+              "$ref": "#/components/schemas/tradev2TradeQuote"
+            },
+            "type": "array"
+          },
+          "tradeYieldToCall": {
+            "description": "Yield-to-call for the trade (output only).",
+            "format": "double",
+            "readOnly": true,
+            "type": "number"
+          },
+          "traderInitials": {
+            "description": "Trader initials.",
+            "type": "string"
+          },
+          "trades": {
+            "description": "Allocation-level trades contained in this BlockTrade.",
+            "items": {
+              "$ref": "#/components/schemas/tradev2Trade"
+            },
+            "type": "array"
+          },
+          "transactionType": {
+            "description": "Transaction type per \"TRANTYPES\" decode (output only).",
+            "type": "string"
+          },
+          "transferExternalAccountName": {
+            "title": "Name of Transfer External Account. (Input only field)",
+            "type": "string"
+          },
+          "transferPortfolioReference": {
+            "$ref": "#/components/schemas/agraphcommoncommonreferencesportfolioPortfolioReference"
+          },
+          "userDefinedFields": {
+            "items": {
+              "$ref": "#/components/schemas/tradev2UserDefinedField"
+            },
+            "title": "User Defined Trade Fields",
+            "type": "array"
+          },
+          "version": {
+            "description": "Trade version number (output only).",
+            "format": "int32",
+            "readOnly": true,
+            "type": "integer"
+          },
+          "weightedAverageCoupon": {
+            "description": "Weighted Average Coupon (Input only field).",
+            "format": "double",
+            "type": "number"
+          },
+          "weightedAverageMaturity": {
+            "description": "Weighted Average Maturity (Input only field).",
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "tradev2CancelTradeRequest": {
+        "description": "Specifies a single trade to cancel, identified by its TradeKey, enriched  with cancellation options.",
+        "properties": {
+          "config": {
+            "$ref": "#/components/schemas/v2CancelTradeConfig"
+          },
+          "tradeKey": {
+            "$ref": "#/components/schemas/v2TradeKey"
+          }
+        },
+        "type": "object"
+      },
+      "tradev2CancelTradeResponse": {
+        "description": "Provides the outcome of an individual cancel request, showing either the error details or a summary of the successfully cancelled trade.",
+        "properties": {
+          "result": {
+            "$ref": "#/components/schemas/tradev2TradeResult"
+          }
+        },
+        "type": "object"
+      },
+      "tradev2Contract": {
+        "properties": {
+          "assetReference": {
+            "$ref": "#/components/schemas/referencesassetAssetReference"
+          },
+          "currencyCode": {
+            "readOnly": true,
+            "title": "contract currency. (Output only field)",
+            "type": "string"
+          },
+          "invnum": {
+            "format": "int32",
+            "title": "Trade invnum",
+            "type": "integer"
+          },
+          "quantity": {
+            "format": "double",
+            "title": "Quote quantity",
+            "type": "number"
+          },
+          "tradeNumber": {
+            "format": "int32",
+            "readOnly": true,
+            "title": "contract trade number. (Output only field)",
+            "type": "integer"
+          }
+        },
+        "title": "Linked Contract Trade Reference",
+        "type": "object"
+      },
+      "tradev2ExecutionTimeSource": {
+        "default": "EXECUTION_TIME_SOURCE_UNSPECIFIED",
+        "description": "- EXECUTION_TIME_SOURCE_UNSPECIFIED: No value specified\n - EXECUTION_TIME_SOURCE_VENUE: Time sent from the trading venue\n - EXECUTION_TIME_SOURCE_AUTHORIZED_TIME: Picked up from trade authorized time\n - EXECUTION_TIME_SOURCE_ENTRY_TIME: Picked up from trade entry time\n - EXECUTION_TIME_SOURCE_MANUAL: Time manually entered by user",
+        "enum": [
+          "EXECUTION_TIME_SOURCE_UNSPECIFIED",
+          "EXECUTION_TIME_SOURCE_VENUE",
+          "EXECUTION_TIME_SOURCE_AUTHORIZED_TIME",
+          "EXECUTION_TIME_SOURCE_ENTRY_TIME",
+          "EXECUTION_TIME_SOURCE_MANUAL"
+        ],
+        "title": "The source of the trade execution time value",
+        "type": "string"
+      },
+      "tradev2ExternalTradeReference": {
+        "description": "External Trade Reference.",
+        "properties": {
+          "accountCode": {
+            "format": "int64",
+            "title": "Account code",
+            "type": "string"
+          },
+          "externalInvnum1": {
+            "title": "External invnum 1",
+            "type": "string"
+          },
+          "externalInvnum2": {
+            "title": "External invnum 2",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "tradev2FilterQuery": {
+        "description": "Captures various criteria and options for filtering trades.",
+        "properties": {
+          "criteria": {
+            "$ref": "#/components/schemas/v2FilterQueryCriteria"
+          },
+          "options": {
+            "description": "Options for loading additional trade data to enrich the response.\n\"FILTER_QUERY_OPTION_UNSPECIFIED\" -  Default value. Indicates that no additional filtering options are applied. When specified, this option does not modify the API response.\n\"FILTER_QUERY_OPTION_LOAD_TRADE_RELATIONSHIP\": Include trade relationship metadata (such as links to related trades) for each trade in the response.\n\"FILTER_QUERY_OPTION_LOAD_EXTERNAL_TRADE_REFERENCE\": Include external trade references (for example, Trade IDs from external systems or platforms).\n\"FILTER_QUERY_OPTION_LOAD_TRADE_COLLATERAL\": Include collateral-related details associated with the trade.\n\"FILTER_QUERY_OPTION_LOAD_TRADE_FX_LEGS\": Include FX leg details (such as spot/forward components for FX trades) for each trade in the response.",
+            "items": {
+              "$ref": "#/components/schemas/v2FilterQueryOption"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "tradev2FilterTradesRequest": {
+        "description": "It represents a request to filter trades.",
+        "properties": {
+          "expands": {
+            "description": "Specifies which related reference data should be included in the response.\nCurrently, only asset-related information can be expanded. By default, the response includes just the asset ID.\nTo get more detailed asset information, use \"asset.summary\" to include a summary with additional asset details.\nFor full usage guidance, refer to the Trade API release notes.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "pageSize": {
+            "description": "The maximum number of trades to return. The service may return fewer than this value. If unspecified or 0, the default value will be applied.",
+            "format": "int32",
+            "type": "integer"
+          },
+          "pageToken": {
+            "description": "A page token, received from a previous 'filterTrades' call. Provide this to retrieve the subsequent page.\nWhen paginating, all other parameters provided to 'filterTrades' must match the call that provided the page token.",
+            "type": "string"
+          },
+          "query": {
+            "$ref": "#/components/schemas/tradev2FilterQuery"
+          }
+        },
+        "type": "object"
+      },
+      "tradev2FilterTradesResponse": {
+        "description": "Returns a paginated list of block trades that satisfy the specified filter criteria, enriched based on any requested options and expands. It also carries a next_page_token for retrieving additional results and a status field summarizing processing progress and any partial failures.",
+        "properties": {
+          "blockTrades": {
+            "description": "Returns a list of block trades matching the filtering criteria.\nA block trade represents a single execution with shared block‑level attributes and includes one or more underlying allocation trades.",
+            "items": {
+              "$ref": "#/components/schemas/tradev2BlockTrade"
+            },
+            "type": "array"
+          },
+          "nextPageToken": {
+            "description": "A token to retrieve the next page of results in subsequent request.",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/googlerpcStatus"
+          }
+        },
+        "type": "object"
+      },
+      "tradev2MBSCCType": {
+        "default": "MBSCC_TYPE_UNSPECIFIED",
+        "description": "- MBSCC_TYPE_UNSPECIFIED: Unspecified value\n - MBSCC_TYPE_TRADE_FOR_TRADE: Trade for Trade\n - MBSCC_TYPE_SETTLEMENT_BALANCE_ORDER: Settlement Balance Order",
+        "enum": [
+          "MBSCC_TYPE_UNSPECIFIED",
+          "MBSCC_TYPE_TRADE_FOR_TRADE",
+          "MBSCC_TYPE_SETTLEMENT_BALANCE_ORDER"
+        ],
+        "title": "Mortgage-Backed Securities Clearing Corporation type",
+        "type": "string"
+      },
+      "tradev2PortfolioCriterion": {
+        "description": "It represents portfolio-specific criteria. Only one field should be set in this criterion.",
+        "properties": {
+          "portfolioGroupTicker": {
+            "description": "A ticker that represents a group of portfolios.",
+            "type": "string"
+          },
+          "portfolioReferences": {
+            "description": "A list of portfolio ids or other unique identifiers.",
+            "items": {
+              "$ref": "#/components/schemas/agraphcommoncommonreferencesportfolioPortfolioReference"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "tradev2PostTradeRequest": {
+        "description": "Sends a single BlockTrade to be created or updated, along with PostTradeConfig that defines how the system should treat existing data and external account context.",
+        "properties": {
+          "blockTrade": {
+            "$ref": "#/components/schemas/tradev2BlockTrade"
+          },
+          "config": {
+            "$ref": "#/components/schemas/v2PostTradeConfig"
+          }
+        },
+        "type": "object"
+      },
+      "tradev2PostTradeResponse": {
+        "description": "Returns a TradeResult describing the outcome of the post operation for the requested trade, either as a concise success summary or an error.",
+        "properties": {
+          "result": {
+            "$ref": "#/components/schemas/tradev2TradeResult"
+          }
+        },
+        "type": "object"
+      },
+      "tradev2PostingMode": {
+        "default": "POSTING_MODE_UNSPECIFIED",
+        "description": "Defines the action to take when posting trades.\n\n - POSTING_MODE_UNSPECIFIED: If posting mode is unspecified, all trades are treated as new.\n - POSTING_MODE_NEW: The posting mode for creating new trades.\n - POSTING_MODE_UPDATE: The posting mode for updating existing trades.",
+        "enum": [
+          "POSTING_MODE_UNSPECIFIED",
+          "POSTING_MODE_NEW",
+          "POSTING_MODE_UPDATE"
+        ],
+        "type": "string"
+      },
+      "tradev2RetrieveTradesRequest": {
+        "description": "Specifies the criteria and options used to retrieve one or more trades by their keys, external references, or order identifiers.",
+        "properties": {
+          "expands": {
+            "description": "Specifies which related reference data should be included in the response.\nCurrently, only asset-related information can be expanded. By default, the response includes just the asset ID.\nTo get more detailed asset information, use \"asset.summary\" to include a summary with additional asset details.\nFor full usage guidance, refer to the Trade API release notes.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "query": {
+            "$ref": "#/components/schemas/v2RetrieveQuery"
+          }
+        },
+        "type": "object"
+      },
+      "tradev2RetrieveTradesResponse": {
+        "description": "Returns the list of trades that match the specified retrieve criteria, along with thei adittional details based on any expands or options requested.",
+        "properties": {
+          "blockTrades": {
+            "description": "The list of block trades.",
+            "items": {
+              "$ref": "#/components/schemas/tradev2BlockTrade"
+            },
+            "type": "array"
+          },
+          "status": {
+            "$ref": "#/components/schemas/googlerpcStatus"
+          }
+        },
+        "type": "object"
+      },
+      "tradev2Trade": {
+        "description": "Trade represents a single executed transaction within a portfolio.",
+        "properties": {
+          "additionalTradeCharge": {
+            "description": "Non-net-money impact charge/commission amount (output only).",
+            "format": "double",
+            "readOnly": true,
+            "type": "number"
+          },
+          "allocationAmount": {
+            "description": "Allocation amount (output only field).",
+            "format": "double",
+            "readOnly": true,
+            "type": "number"
+          },
+          "collaterals": {
+            "description": "Collateral records associated with the trade.",
+            "items": {
+              "$ref": "#/components/schemas/tradev2TradeCollateral"
+            },
+            "type": "array"
+          },
+          "commission": {
+            "description": "Commission amount in settlement currency (output only field).",
+            "format": "double",
+            "readOnly": true,
+            "type": "number"
+          },
+          "contracts": {
+            "description": "Linked contract trades (max 5).",
+            "items": {
+              "$ref": "#/components/schemas/tradev2Contract"
+            },
+            "type": "array"
+          },
+          "currentFactoredDownAmount": {
+            "description": "Current (factored down) amount. For a trade, this is the trade quantity * factor (output only field).",
+            "format": "double",
+            "readOnly": true,
+            "type": "number"
+          },
+          "effectiveTermDate": {
+            "description": "Effective term date in ISO 8601 format YYYY-MM-DD (e.g.  \"2026-01-14\") (output only field).",
+            "format": "date",
+            "readOnly": true,
+            "type": "string",
+            "example": "2026-07-01"
+          },
+          "exchange": {
+            "description": "Execution exchange/venue identifier.",
+            "type": "string"
+          },
+          "exchangeRate": {
+            "description": "Exchange rate.",
+            "format": "double",
+            "type": "number"
+          },
+          "externalTradeReferences": {
+            "description": "External Trade References.",
+            "items": {
+              "$ref": "#/components/schemas/tradev2ExternalTradeReference"
+            },
+            "type": "array"
+          },
+          "fee": {
+            "description": "Trade fee amount (output only field).",
+            "format": "double",
+            "readOnly": true,
+            "type": "number"
+          },
+          "forwardExternalTradeReferences": {
+            "description": "External Trade Reference for the Forward leg (input only field).",
+            "items": {
+              "$ref": "#/components/schemas/tradev2ExternalTradeReference"
+            },
+            "type": "array"
+          },
+          "forwardInterest": {
+            "description": "Interest amount for the forward leg (input only field).",
+            "format": "double",
+            "type": "number"
+          },
+          "forwardPrincipal": {
+            "description": "Principal amount for the forward leg (input only field).",
+            "format": "double",
+            "type": "number"
+          },
+          "forwardQuantity": {
+            "description": "Quantity for the forward leg (input only field).",
+            "format": "double",
+            "type": "number"
+          },
+          "forwardSettlementInstructionId1": {
+            "description": "Settlement instruction  ID for the forward leg (input only field).",
+            "type": "string"
+          },
+          "fxLegs": {
+            "$ref": "#/components/schemas/v2TradeFXLegs"
+          },
+          "id": {
+            "description": "Unique trade identifier.",
+            "type": "string"
+          },
+          "interest": {
+            "description": "Accrued/associated interest amount.",
+            "format": "double",
+            "type": "number"
+          },
+          "interestAtMaturity": {
+            "description": "Calculated interest at maturity for cash trades. By Aladdin® convention, incoming money is negative, and outgoing money is positive (output only field).",
+            "format": "double",
+            "readOnly": true,
+            "type": "number"
+          },
+          "invnum": {
+            "description": "Aladdin Investment number (invnum).",
+            "format": "int32",
+            "type": "integer"
+          },
+          "modifyTime": {
+            "description": "Trade modification timestamp in ISO format (e.g.  \"2026-01-14T16:30:00-05:00\") (output only).",
+            "format": "date-time",
+            "readOnly": true,
+            "type": "string",
+            "example": "2026-07-01 12:26:13.499"
+          },
+          "mortgageBackedSecuritiesClearingCorporationType": {
+            "$ref": "#/components/schemas/tradev2MBSCCType"
+          },
+          "orderId": {
+            "description": "Order ID associated with this trade.",
+            "type": "string"
+          },
+          "origOrderReferences": {
+            "description": "Reference to the original order associated with this trade, including Portfolio Manager's and external order identifiers.",
+            "items": {
+              "$ref": "#/components/schemas/v2OriginalOrderReference"
+            },
+            "readOnly": true,
+            "type": "array"
+          },
+          "portfolioReference": {
+            "$ref": "#/components/schemas/agraphcommoncommonreferencesportfolioPortfolioReference"
+          },
+          "principal": {
+            "description": "Principal amount for the trade.",
+            "format": "double",
+            "type": "number"
+          },
+          "quantity": {
+            "description": "Trade quantity (original face/unsigned amount).",
+            "format": "double",
+            "type": "number"
+          },
+          "rollFee": {
+            "description": "Fee charged for rolling the position (output only field).",
+            "format": "double",
+            "readOnly": true,
+            "type": "number"
+          },
+          "seriesNumber": {
+            "description": "Series number (Output only field).",
+            "format": "int32",
+            "readOnly": true,
+            "type": "integer"
+          },
+          "settlementInstructionId1": {
+            "description": "Settlement instruction ID1 for the trade.",
+            "type": "string"
+          },
+          "strategyReference": {
+            "$ref": "#/components/schemas/referencesstrategyStrategyReference"
+          },
+          "tradeCharges": {
+            "description": "Charges applied to the trade.",
+            "items": {
+              "$ref": "#/components/schemas/tradev2TradeCharge"
+            },
+            "type": "array"
+          },
+          "tradeFlags": {
+            "$ref": "#/components/schemas/tradev2TradeFlags"
+          },
+          "tradeNumber": {
+            "description": "Trade number.",
+            "format": "int32",
+            "type": "integer"
+          },
+          "tradeRelationships": {
+            "description": "List of trade relationships.",
+            "items": {
+              "$ref": "#/components/schemas/tradev2TradeRelationship"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "tradev2TradeCharge": {
+        "properties": {
+          "amount": {
+            "description": "Charge amount. This field can be positive or negative: positive means you are paying the charge (usual case). Negative means you are earning the charge (rare).",
+            "format": "double",
+            "type": "number"
+          },
+          "calculationType": {
+            "description": "Calculation method. Please refer to the Aladdin decodes TRD_CHARGE_CALC to get the list of valid values.",
+            "type": "string"
+          },
+          "category": {
+            "title": "Charge type or category",
+            "type": "string"
+          },
+          "rate": {
+            "format": "double",
+            "title": "Rate",
+            "type": "number"
+          },
+          "rateType": {
+            "description": "Type of rate. (Output only field) Please refer to the Aladdin decodes CHARGERATETYPES to get the list of valid values.",
+            "readOnly": true,
+            "type": "string"
+          }
+        },
+        "title": "Trade charge",
+        "type": "object"
+      },
+      "tradev2TradeCollateral": {
+        "properties": {
+          "assetReference": {
+            "$ref": "#/components/schemas/referencesassetAssetReference"
+          },
+          "cashPercentage": {
+            "format": "double",
+            "title": "Indicates haircut to be applied to loan amount",
+            "type": "number"
+          },
+          "collateralPercentage": {
+            "format": "double",
+            "title": "Indicates haircut to be applied to collateral",
+            "type": "number"
+          },
+          "effectiveTerminationDate": {
+            "format": "date",
+            "title": "Effective termination date",
+            "type": "string",
+            "example": "2026-07-01"
+          },
+          "interest": {
+            "format": "double",
+            "title": "Interest value",
+            "type": "number"
+          },
+          "price": {
+            "format": "double",
+            "title": "Price",
+            "type": "number"
+          },
+          "principal": {
+            "format": "double",
+            "title": "Principal money on the trade in the settle currency",
+            "type": "number"
+          },
+          "quantity": {
+            "format": "double",
+            "title": "Collateral quantity",
+            "type": "number"
+          },
+          "terminationDate": {
+            "format": "date",
+            "title": "Termination date",
+            "type": "string",
+            "example": "2026-07-01"
+          }
+        },
+        "title": "Collateral for the Trade",
+        "type": "object"
+      },
+      "tradev2TradeComment": {
+        "properties": {
+          "comment": {
+            "title": "Trade comment",
+            "type": "string"
+          },
+          "commentType": {
+            "$ref": "#/components/schemas/tradev2TradeCommentCommentType"
+          }
+        },
+        "title": "Trade Comment",
+        "type": "object"
+      },
+      "tradev2TradeCommentCommentType": {
+        "default": "COMMENT_TYPE_UNSPECIFIED",
+        "description": "- COMMENT_TYPE_UNSPECIFIED: Unspecified\n - COMMENT_TYPE_GENERAL: General\n - COMMENT_TYPE_SPECIAL: Special\n - COMMENT_TYPE_BANK: Bank\n - COMMENT_TYPE_INTERNAL: Internal",
+        "enum": [
+          "COMMENT_TYPE_UNSPECIFIED",
+          "COMMENT_TYPE_GENERAL",
+          "COMMENT_TYPE_SPECIAL",
+          "COMMENT_TYPE_BANK",
+          "COMMENT_TYPE_INTERNAL"
+        ],
+        "title": "Comment Type",
+        "type": "string"
+      },
+      "tradev2TradeFlags": {
+        "description": "Trade flag.",
+        "properties": {
+          "allowDirtyPrice": {
+            "readOnly": true,
+            "title": "Allow dirty price. (Output only field)",
+            "type": "boolean"
+          },
+          "beneficialOwnershipChange": {
+            "title": "Change of beneficial ownership",
+            "type": "boolean"
+          },
+          "cashHaircut": {
+            "readOnly": true,
+            "title": "Cash haircut. (Output only field)",
+            "type": "boolean"
+          },
+          "compliancePending": {
+            "readOnly": true,
+            "title": "Compliance pending. (Output only field)",
+            "type": "boolean"
+          },
+          "deliveryFreePayment": {
+            "title": "This trade settles free of payment; i.e., it does not settle DVP",
+            "type": "boolean"
+          },
+          "electronicPoolNotificationEligible": {
+            "readOnly": true,
+            "title": "EPN (Electronic Pool Notification) eligible. (Output only field)",
+            "type": "boolean"
+          },
+          "fullyAllocated": {
+            "readOnly": true,
+            "title": "Fully allocated. (Output only field)",
+            "type": "boolean"
+          },
+          "netted": {
+            "readOnly": true,
+            "title": "Netted. (Output only field)",
+            "type": "boolean"
+          },
+          "outsideCommitment": {
+            "title": "Out-side commitment",
+            "type": "boolean"
+          },
+          "suppressContract": {
+            "title": "Suppress Contract",
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "tradev2TradeQuote": {
+        "properties": {
+          "bidPrice": {
+            "description": "The bid price associated with the quote.",
+            "format": "double",
+            "type": "number"
+          },
+          "bidRate": {
+            "description": "The bid in yield form. It can be calculated based on the bid and security details.",
+            "format": "double",
+            "type": "number"
+          },
+          "bidSpread": {
+            "description": "The bid as a spread. It can be calculated based on the bid and other trade details like pricing index, pricing spread, and settle date.",
+            "format": "double",
+            "type": "number"
+          },
+          "brokerId": {
+            "title": "Broker Id - The unique ID of the broker who provided this quote",
+            "type": "string"
+          },
+          "brokerQuoteId": {
+            "readOnly": true,
+            "title": "Broker quote id. (Output only field)",
+            "type": "string"
+          },
+          "offerPrice": {
+            "format": "double",
+            "title": "The offer price associated with the quote",
+            "type": "number"
+          },
+          "offerRate": {
+            "description": "The offer in yield form. It can be calculated based on the offer and security details.",
+            "format": "double",
+            "type": "number"
+          },
+          "offerSpread": {
+            "format": "double",
+            "title": "The offer as a spread. It can be calculated based on the offer and other trade details like pricing index, pricing spread, and settle date",
+            "type": "number"
+          },
+          "quantity": {
+            "format": "double",
+            "readOnly": true,
+            "title": "Quote quantity. (Output only field)",
+            "type": "number"
+          },
+          "status": {
+            "$ref": "#/components/schemas/tradev2TradeQuoteQuoteStatus"
+          }
+        },
+        "title": "Trade Quote",
+        "type": "object"
+      },
+      "tradev2TradeQuoteQuoteStatus": {
+        "default": "QUOTE_STATUS_UNSPECIFIED",
+        "description": "- QUOTE_STATUS_UNSPECIFIED: Unspecified\n - QUOTE_STATUS_CANCELLED: Cancelled\n - QUOTE_STATUS_CLIENT_PASSED: Client passed\n - QUOTE_STATUS_COVERED: Covered\n - QUOTE_STATUS_DID_NOT_TRADE: DNT\n - QUOTE_STATUS_ERROR: Error Aladdin\n - QUOTE_STATUS_EXPIRED: Expired\n - QUOTE_STATUS_MISSED: Missed\n - QUOTE_STATUS_PASSED: Passed\n - QUOTE_STATUS_TIED: Tied\n - QUOTE_STATUS_TIMED_OUT: Time out\n - QUOTE_STATUS_TRADED: Traded\n - QUOTE_STATUS_REJECTED: Rejected\n - QUOTE_STATUS_TIED_COVER: Tied cover\n - QUOTE_STATUS_DONE_AWAY: Done away\n - QUOTE_STATUS_NOT_RECEIVED: Not Received\n - QUOTE_STATUS_ACTIVE: Active",
+        "enum": [
+          "QUOTE_STATUS_UNSPECIFIED",
+          "QUOTE_STATUS_CANCELLED",
+          "QUOTE_STATUS_CLIENT_PASSED",
+          "QUOTE_STATUS_COVERED",
+          "QUOTE_STATUS_DID_NOT_TRADE",
+          "QUOTE_STATUS_ERROR",
+          "QUOTE_STATUS_EXPIRED",
+          "QUOTE_STATUS_MISSED",
+          "QUOTE_STATUS_PASSED",
+          "QUOTE_STATUS_TIED",
+          "QUOTE_STATUS_TIMED_OUT",
+          "QUOTE_STATUS_TRADED",
+          "QUOTE_STATUS_REJECTED",
+          "QUOTE_STATUS_TIED_COVER",
+          "QUOTE_STATUS_DONE_AWAY",
+          "QUOTE_STATUS_NOT_RECEIVED",
+          "QUOTE_STATUS_ACTIVE"
+        ],
+        "title": "Trade Quote Status",
+        "type": "string"
+      },
+      "tradev2TradeRelationship": {
+        "properties": {
+          "amount": {
+            "format": "double",
+            "title": "Amount",
+            "type": "number"
+          },
+          "applyTime": {
+            "format": "date-time",
+            "readOnly": true,
+            "title": "Apply time. (Output only field)",
+            "type": "string",
+            "example": "2026-07-01 12:26:13.499"
+          },
+          "invnum1": {
+            "format": "int32",
+            "readOnly": true,
+            "title": "Invnum of first trade. (Output only field)",
+            "type": "integer"
+          },
+          "invnum2": {
+            "format": "int32",
+            "title": "Invnum of second trade",
+            "type": "integer"
+          },
+          "portfolioReference1": {
+            "$ref": "#/components/schemas/agraphcommoncommonreferencesportfolioPortfolioReference"
+          },
+          "portfolioReference2": {
+            "$ref": "#/components/schemas/agraphcommoncommonreferencesportfolioPortfolioReference"
+          },
+          "tradeRelationshipType": {
+            "title": "Trade relationship type",
+            "type": "string"
+          },
+          "version1": {
+            "format": "int32",
+            "readOnly": true,
+            "title": "Version of first trade. (Output only field)",
+            "type": "integer"
+          },
+          "version2": {
+            "format": "int32",
+            "readOnly": true,
+            "title": "Version of second trade. (Output only field)",
+            "type": "integer"
+          }
+        },
+        "title": "Relationship between trades",
+        "type": "object"
+      },
+      "tradev2TradeResult": {
+        "description": "Captures the outcome of an individual trade operation within a post or cancel request, returning either an error (with details about why the operation failed) or a concise BlockTradeSnippet summarizing the successfully processed trade.",
+        "properties": {
+          "error": {
+            "$ref": "#/components/schemas/googlerpcStatus"
+          },
+          "output": {
+            "$ref": "#/components/schemas/v2BlockTradeSnippet"
+          }
+        },
+        "type": "object"
+      },
+      "tradev2UserDefinedField": {
+        "properties": {
+          "fieldLabel": {
+            "description": "Label value for User Defined Field. Please refer to Aladdin decode 'TE_CUSTOM' to get the list of valid values.",
+            "type": "string"
+          },
+          "fieldValue": {
+            "description": "Value of User Defined Field. Please refer to Aladdin decode 'TE_CUSTOM' to get the list of valid values.",
+            "type": "string"
+          }
+        },
+        "title": "User Defined Trade Field",
+        "type": "object"
+      },
+      "tradingorder_managementorderv1ExternalOrderReference": {
+        "properties": {
+          "accountCode": {
+            "description": "Aladdin's unique account code/ID for an organization or system (e.g. an external broker or counterparty). Also known as \"org_id\" to some legacy systems.",
+            "format": "int64",
+            "type": "string"
+          },
+          "externalId1": {
+            "description": "Client‑provided order identifier used to link an Aladdin order to an order that already exists in a non‑Aladdin system.",
+            "type": "string"
+          },
+          "externalId2": {
+            "description": "Client‑provided second order identifier used to link an Aladdin order to an order that already exists in a non‑Aladdin system.",
+            "type": "string"
+          }
+        },
+        "title": "External Order Info",
+        "type": "object"
+      },
+      "v1LongrunningOperation": {
+        "description": "LongrunningOperation represents a long-running operation that is the result\nof a network API call.",
+        "properties": {
+          "done": {
+            "description": "If the value is `false`, it means the operation is still in progress.\nIf true, the operation is completed, and either `error` or `response` is\navailable.",
+            "type": "boolean"
+          },
+          "error": {
+            "$ref": "#/components/schemas/googlerpcStatus"
+          },
+          "id": {
+            "description": "The server-assigned id, which is a UUID of 36 characters in length,\nonly unique within the same service that originally returns it.",
+            "type": "string"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Any"
+          },
+          "response": {
+            "$ref": "#/components/schemas/Any"
+          }
+        },
+        "type": "object"
+      },
+      "v1LongrunningOperation_BatchCancelTrades": {
+        "description": "LongrunningOperation represents a long-running operation that is the result\nof a network API call.",
+        "properties": {
+          "done": {
+            "description": "If the value is `false`, it means the operation is still in progress.\nIf true, the operation is completed, and either `error` or `response` is\navailable.",
+            "type": "boolean"
+          },
+          "error": {
+            "$ref": "#/components/schemas/googlerpcStatus"
+          },
+          "id": {
+            "description": "The server-assigned id, which is a UUID of 36 characters in length,\nonly unique within the same service that originally returns it.",
+            "type": "string"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Any"
+          },
+          "response": {
+            "$ref": "#/components/schemas/tradev2BatchCancelTradesResponse"
+          }
+        },
+        "type": "object"
+      },
+      "v1LongrunningOperation_BatchPostTrades": {
+        "description": "LongrunningOperation represents a long-running operation that is the result\nof a network API call.",
+        "properties": {
+          "done": {
+            "description": "If the value is `false`, it means the operation is still in progress.\nIf true, the operation is completed, and either `error` or `response` is\navailable.",
+            "type": "boolean"
+          },
+          "error": {
+            "$ref": "#/components/schemas/googlerpcStatus"
+          },
+          "id": {
+            "description": "The server-assigned id, which is a UUID of 36 characters in length,\nonly unique within the same service that originally returns it.",
+            "type": "string"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Any"
+          },
+          "response": {
+            "$ref": "#/components/schemas/tradev2BatchPostTradesResponse"
+          }
+        },
+        "type": "object"
+      },
+      "v2BlockTradeSnippet": {
+        "description": "BlockTradeSnippet represents a summary of a BlockTrade.",
+        "properties": {
+          "assetId": {
+            "title": "Security associated with this BlockTrade",
+            "type": "string"
+          },
+          "trades": {
+            "items": {
+              "$ref": "#/components/schemas/v2TradeSnippet"
+            },
+            "title": "The TradeSnippets contained in this BlockTradeSnippet",
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "v2BrokerCriterion": {
+        "description": "It represents broker-specific criteria.",
+        "properties": {
+          "brokerReferences": {
+            "description": "A list of broker references for filtering trades.",
+            "items": {
+              "$ref": "#/components/schemas/referencesbrokerBrokerReference"
+            },
+            "type": "array"
+          },
+          "executingBrokerReferences": {
+            "description": "A list of executing broker references for filtering trades.",
+            "items": {
+              "$ref": "#/components/schemas/referencesbrokerBrokerReference"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "v2CancelTradeConfig": {
+        "description": "Defines how trade cancellations are processed.",
+        "properties": {
+          "cancelEntireBlock": {
+            "description": "When set to True, the entire trade block will be cancelled.\nWhen set to False, the API will cancel only the specified trades and will not cancel the rest of the allocations in the same block.",
+            "type": "boolean"
+          },
+          "suppressExternalNotification": {
+            "description": "When set to True, trade notifications to external parties or external systems will be suppressed. \nWhen set to False, trade notifications to external parties or external systems will be sent.",
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "v2DateTimeCriterion": {
+        "description": "It represents date and time-specific criteria. At least one field must be set in this criterion.",
+        "properties": {
+          "modifyTimeRange": {
+            "$ref": "#/components/schemas/v2DateTimeCriterionModifyTimeRange"
+          },
+          "settlementDate": {
+            "format": "date",
+            "title": "It specifies settlement date of trade. Expected format: YYYY-MM-DD",
+            "type": "string",
+            "example": "2026-07-01"
+          },
+          "tradeDate": {
+            "format": "date",
+            "title": "It specifies date of trade. Expected format: YYYY-MM-DD",
+            "type": "string",
+            "example": "2026-07-01"
+          }
+        },
+        "type": "object"
+      },
+      "v2DateTimeCriterionModifyTimeRange": {
+        "description": "The trade modify time range in RFC 3339 format (e.g.  \"2026-01-14T16:30:00Z\"). The start time range must be before the end time range for a valid query range.",
+        "properties": {
+          "endTime": {
+            "format": "date-time",
+            "title": "End time. Expected: UTC time",
+            "type": "string",
+            "example": "2026-07-01 12:26:13.499"
+          },
+          "startTime": {
+            "format": "date-time",
+            "title": "Start time. Expected: UTC time",
+            "type": "string",
+            "example": "2026-07-01 12:26:13.499"
+          }
+        },
+        "type": "object"
+      },
+      "v2FilterQueryCriteria": {
+        "description": "It represents criteria to filter trades based on portfolio, datetime, asset, broker and other trade attributes.",
+        "properties": {
+          "asset": {
+            "$ref": "#/components/schemas/tradev2AssetCriterion"
+          },
+          "broker": {
+            "$ref": "#/components/schemas/v2BrokerCriterion"
+          },
+          "dateTime": {
+            "$ref": "#/components/schemas/v2DateTimeCriterion"
+          },
+          "portfolio": {
+            "$ref": "#/components/schemas/tradev2PortfolioCriterion"
+          },
+          "trade": {
+            "$ref": "#/components/schemas/v2TradeCriterion"
+          }
+        },
+        "type": "object"
+      },
+      "v2FilterQueryOption": {
+        "default": "FILTER_QUERY_OPTION_UNSPECIFIED",
+        "description": "Defines various filtering options.\n\n - FILTER_QUERY_OPTION_UNSPECIFIED: Default value. Indicates that no additional filtering options are applied. When specified, this option does not modify the API response.\n - FILTER_QUERY_OPTION_LOAD_TRADE_RELATIONSHIP: Option to load trade relationships.\n - FILTER_QUERY_OPTION_LOAD_EXTERNAL_TRADE_REFERENCE: Option to load external references.\n - FILTER_QUERY_OPTION_LOAD_TRADE_COLLATERAL: Option to load trade collateral.\n - FILTER_QUERY_OPTION_LOAD_TRADE_FX_LEGS: Option to load trade fx legs.\n - FILTER_QUERY_OPTION_LOAD_ORIGINAL_ORDER_REFERENCE: Option to load original order reference including Portfolio Manager's and external order identifiers.",
+        "enum": [
+          "FILTER_QUERY_OPTION_UNSPECIFIED",
+          "FILTER_QUERY_OPTION_LOAD_TRADE_RELATIONSHIP",
+          "FILTER_QUERY_OPTION_LOAD_EXTERNAL_TRADE_REFERENCE",
+          "FILTER_QUERY_OPTION_LOAD_TRADE_COLLATERAL",
+          "FILTER_QUERY_OPTION_LOAD_TRADE_FX_LEGS",
+          "FILTER_QUERY_OPTION_LOAD_ORIGINAL_ORDER_REFERENCE"
+        ],
+        "type": "string"
+      },
+      "v2OriginalOrderReference": {
+        "properties": {
+          "externalOrderReferences": {
+            "description": "External order references associated with this PM order.",
+            "items": {
+              "$ref": "#/components/schemas/tradingorder_managementorderv1ExternalOrderReference"
+            },
+            "type": "array"
+          },
+          "originalOrderId": {
+            "description": "The unique identifier of the original Portfolio Manager (PM) order associated with this trade.",
+            "type": "string"
+          }
+        },
+        "title": "Reference to the original order associated with this trade, including Portfolio Manager's and external order identifiers",
+        "type": "object"
+      },
+      "v2PostTradeConfig": {
+        "description": "PostTradeConfig represents options used to post trades.",
+        "properties": {
+          "accountCode": {
+            "description": "Account code of the external account. If included, the trade will be linked to this external account.",
+            "format": "int64",
+            "type": "string"
+          },
+          "entity": {
+            "description": "Specifies the entity.",
+            "format": "int32",
+            "type": "integer"
+          },
+          "entityType": {
+            "description": "Specifies the entity type of the external account.",
+            "type": "string"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/tradev2PostingMode"
+          },
+          "overrideCharges": {
+            "description": "Indicates whether charges should be overridden. When true, existing charges on the trade are overwritten; when false, existing charges remain unchanged.",
+            "type": "boolean"
+          },
+          "overrideRelationships": {
+            "title": "Indicates whether existing trade relationships should be overridden. When true, trade relationships are updated; when false, existing relationships remain unchanged",
+            "type": "boolean"
+          },
+          "updateEntireBlock": {
+            "description": "Indicates whether the entire block of trades should be updated. When true, all trades in the block are updated; when false, the update applies only to the specified allocation-level trade.",
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "v2RetrieveQuery": {
+        "description": "Defines the criteria to retrieve specific trades, such as trade keys, external trade references, or order identifiers.",
+        "properties": {
+          "criteria": {
+            "$ref": "#/components/schemas/v2RetrieveQueryCriteria"
+          },
+          "options": {
+            "description": "Options for loading additional trade data such as complete block trade.\n\"RETRIEVE_QUERY_OPTION_UNSPECIFIED\" -  Default value. Indicates that no additional filtering options are applied. When specified, this option does not modify the API response.\n\"RETRIEVE_QUERY_OPTION_LOAD_COMPLETE_BLOCK\" - Returns the complete block trade — including all allocations — instead of only the specific allocation(s) requested.",
+            "items": {
+              "$ref": "#/components/schemas/v2RetrieveQueryOption"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "v2RetrieveQueryCriteria": {
+        "description": "Criteria used to retrieve trades. Only one type of criterion (e.g., trade keys, external trade keys, order keys) may be provided in a single request.",
+        "properties": {
+          "externTradeKeys": {
+            "description": "A list of external trade key criteria.",
+            "items": {
+              "$ref": "#/components/schemas/tradev2ExternalTradeReference"
+            },
+            "type": "array"
+          },
+          "orderKeys": {
+            "description": "A list of order ids.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "tradeKeys": {
+            "description": "A list of trade key criteria.",
+            "items": {
+              "$ref": "#/components/schemas/v2TradeKeyCriterion"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "v2RetrieveQueryOption": {
+        "default": "RETRIEVE_QUERY_OPTION_UNSPECIFIED",
+        "description": "Defines various retrieve options.\n\n - RETRIEVE_QUERY_OPTION_UNSPECIFIED: Default value. Indicates that no additional filtering options are applied. When specified, this option does not modify the API response.\n - RETRIEVE_QUERY_OPTION_LOAD_COMPLETE_BLOCK: Option to load complete block trade.\n - RETRIEVE_QUERY_OPTION_LOAD_ORIGINAL_ORDER_REFERENCE: Option to load original order reference including Portfolio Manager's and external order identifiers.",
+        "enum": [
+          "RETRIEVE_QUERY_OPTION_UNSPECIFIED",
+          "RETRIEVE_QUERY_OPTION_LOAD_COMPLETE_BLOCK",
+          "RETRIEVE_QUERY_OPTION_LOAD_ORIGINAL_ORDER_REFERENCE"
+        ],
+        "type": "string"
+      },
+      "v2TradeCriterion": {
+        "description": "It represents trade-specific criteria.",
+        "properties": {
+          "transactionTypes": {
+            "description": "A list of trade transaction types from the decode ‘TRANTYPES’.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "v2TradeFXLegs": {
+        "properties": {
+          "firstLeg": {
+            "$ref": "#/components/schemas/TradeFXLegsFXLeg"
+          },
+          "secondLeg": {
+            "$ref": "#/components/schemas/TradeFXLegsFXLeg"
+          }
+        },
+        "title": "Trade FX legs",
+        "type": "object"
+      },
+      "v2TradeKey": {
+        "description": "TradeKey represents the uniquely identified keys of trade.",
+        "properties": {
+          "invnum": {
+            "description": "Invnum of the trade.",
+            "format": "int32",
+            "required": [
+              "invnum"
+            ],
+            "type": "integer"
+          },
+          "portfolioReference": {
+            "$ref": "#/components/schemas/agraphcommoncommonreferencesportfolioPortfolioReference"
+          }
+        },
+        "required": [
+          "invnum"
+        ],
+        "type": "object"
+      },
+      "v2TradeKeyCriterion": {
+        "description": "It represents trade key criterion.",
+        "properties": {
+          "invnum": {
+            "description": "Invnum of the trade.",
+            "format": "int32",
+            "required": [
+              "invnum"
+            ],
+            "type": "integer"
+          },
+          "portfolioReference": {
+            "$ref": "#/components/schemas/agraphcommoncommonreferencesportfolioPortfolioReference"
+          },
+          "touchCount": {
+            "description": "Touch count of the trade - if version and touch count are absent, we fetch the latest trade.",
+            "format": "int32",
+            "type": "integer"
+          },
+          "version": {
+            "description": "Version of the trade - if version and touch count are absent, we fetch the latest trade.",
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "invnum"
+        ],
+        "type": "object"
+      },
+      "v2TradeSnippet": {
+        "description": "TradeSnippet represents a summary of a Trade.",
+        "properties": {
+          "externalTradeReferences": {
+            "description": "External trade references associated with this trade.",
+            "items": {
+              "$ref": "#/components/schemas/tradev2ExternalTradeReference"
+            },
+            "type": "array"
+          },
+          "invnum": {
+            "description": "Aladdin Investment number (invnum).",
+            "format": "int32",
+            "type": "integer"
+          },
+          "orderId": {
+            "description": "Order ID associated with this trade.",
+            "type": "string"
+          },
+          "portfolioReference": {
+            "$ref": "#/components/schemas/agraphcommoncommonreferencesportfolioPortfolioReference"
+          },
+          "quantity": {
+            "description": "Trade quantity (original face/unsigned amount).",
+            "format": "double",
+            "type": "number"
+          },
+          "tradeNumber": {
+            "description": "Trade number.",
+            "format": "int32",
+            "type": "integer"
+          },
+          "tradeRelationships": {
+            "description": "List of trade relationships.",
+            "items": {
+              "$ref": "#/components/schemas/tradev2TradeRelationship"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      }
+    }
+  }
+}

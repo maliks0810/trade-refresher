@@ -1,5 +1,5 @@
 package routes
 
 const (
-	route_prefix = "/de/"		// PE: default path for route groups
+	apiBasePath = "/de/v1/api"
 )

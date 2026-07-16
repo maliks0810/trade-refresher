@@ -1,2 +1,2 @@
-// Package net provides application specific functions and types for common REST services
+// Package net contains HTTP server startup helpers.
 package net
