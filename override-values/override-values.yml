@@ -1,5 +1,5 @@
 useHostName: true
-useIngress: true
+useIngress: false
 useAutoScaling: false
 useWorkloadIdentity: true
 useSecretsVault: false
