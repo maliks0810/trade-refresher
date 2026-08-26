@@ -1,7 +1,7 @@
 include:
   - project: 'tcw-group/technology/platform-engineering/development-operations/cicd-configurations'
     ref: 'main'
-    file: '/go/pipelines/v4/go-refresher.cloud.pipeline.yml'
+    file: '/go/pipelines/v4/go-webservice.refresher.pipeline.yml'
 
 variables:
   PROJECT_NAME: 'trade-refresher'

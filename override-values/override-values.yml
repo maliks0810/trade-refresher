@@ -1,5 +1,5 @@
 useHostName: true
-useIngress: false
+useIngress: true
 useAutoScaling: false
 useWorkloadIdentity: true
 useSecretsVault: false
@@ -7,18 +7,25 @@ useSnowflakeCredentials: false
 
 resource:
   requests:
-    memory: '512Mi'
-    cpu: '500m'
+    memory: 512Mi
+    cpu: 500m
   limits:
-    memory: '1Gi'
-    cpu: '1000m'
+    memory: 1Gi
+    cpu: 1000m
 
 livenessProbe:
-  port: 8080
-  healthPath: '/health'
+  port: 8100
+  healthPath: /de/v1/api/live
   initialDelaySeconds: 30
   periodSeconds: 60
   failureThreshold: 3
+
+ingress:
+  paths:
+    - path: /de
+      pathType: Prefix
+      serviceName: trade-refresher
+      servicePort: 80
 
 userDefined:
   - name: SERVICE_MESH
